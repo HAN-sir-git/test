@@ -1,0 +1,2 @@
+cout<<typeid(T1).name()<<endl;
+//(T1是变量名)
