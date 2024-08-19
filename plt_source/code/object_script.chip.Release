@@ -1,0 +1,17 @@
+INPUT(
+./release\main.o
+./release\point.o
+./release\entity.o
+./release\polyline.o
+./release\line.o
+./release\common_mathfunc.o
+./release\pltfiledata.o
+./release\data.o
+./release\mainwindow.o
+./release\view.o
+./release\chip.o
+./release\qrc_images.o
+./release\moc_mainwindow.o
+./release\moc_view.o
+./release\moc_pltfiledata.o
+);
