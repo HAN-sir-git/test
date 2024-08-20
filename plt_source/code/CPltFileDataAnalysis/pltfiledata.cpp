@@ -81,14 +81,14 @@ bool PltFileData::readPltGroups(QTextStream& stream)
 
             if (!PolyLinedata.points.empty()) {
                 // 闭合性判断
-                if(PolyLinedata.points.size() > 2 && PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
+                if(PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
                 {
-                   // PolyLinedata.closed = true;
+                    PolyLinedata.closed = true;
                    // PolyLinedata.points.removeLast();
                 }
                 auto points = PolyLinedata.points;
                 std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
-                //t->appendVertexs(points);
+                t->appendVertexs(points);
                 m_convertData->polyline_list.push_back(std::move(t));
             }
             PolyLinedata = PolylineData();
@@ -115,7 +115,6 @@ bool PltFileData::readPltGroups(QTextStream& stream)
         }
 
         if (pltReadTmp.startsWith("PD")) {
-            //qDebug() << "Detected PD command"; // 输出检测到 PD 指令
             pltReadTmp.remove(0, 2);
             if (pltReadTmp.contains(",")) splitChar = ",";
             else splitChar = " ";
@@ -139,17 +138,17 @@ bool PltFileData::readPltGroups(QTextStream& stream)
 
         if (pltReadTmp.startsWith("PG")) {
             if (!PolyLinedata.points.empty()) {
-                // 闭合性判断
-                if(PolyLinedata.points.size() > 2 && PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
-                {
-                   // PolyLinedata.closed = true;
-                   // PolyLinedata.points.removeLast();
-                }
-                auto points = PolyLinedata.points;
-                std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
-                //PolyLinedata = PolylineData();
-               // t->appendVertexs(points);
-                //m_convertData->polyline_list.push_back(std::move(t));
+
+//                if(PolyLinedata.points.size() > 2 && PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
+//                {
+//                   PolyLinedata.closed = true;
+//                   PolyLinedata.points.removeLast();
+//                }
+//                auto points = PolyLinedata.points;
+//                std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
+//                PolyLinedata = PolylineData();
+//                t->appendVertexs(points);
+//                m_convertData->polyline_list.push_back(std::move(t));
             }
 
             xOffset += (xMax - xMin);
@@ -160,15 +159,15 @@ bool PltFileData::readPltGroups(QTextStream& stream)
 
     if (!PolyLinedata.points.empty()) {
         // 闭合性判断
-        if(PolyLinedata.points.size() > 2 && PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
+        if( PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
         {
-           // PolyLinedata.closed = true;
+           PolyLinedata.closed = true;
             //PolyLinedata.points.removeLast();
         }
         auto points = PolyLinedata.points;
         std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
-        //t->appendVertexs(points);
-        //m_convertData->polyline_list.push_back(std::move(t));
+        t->appendVertexs(points);
+        m_convertData->polyline_list.push_back(std::move(t));
     }
 
     return !stream.atEnd();

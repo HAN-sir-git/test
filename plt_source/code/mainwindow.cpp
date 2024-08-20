@@ -70,9 +70,12 @@ MainWindow::MainWindow(QWidget *parent)
     setLayout(layout);
 
     setWindowTitle(tr("Plt Example"));
-
+        showMaximized();
+   // scene->setBackgroundBrush(Qt::black);
     populateScene();
     // 设置初始视口区域
+
+
 
     view->view()->setSceneRect(scene->sceneRect());
     view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
@@ -86,6 +89,7 @@ void MainWindow::populateScene()
 
 void  MainWindow::openPltFile()
 {
+    static int cs = 0;
     bool ret = parser->ParsePltFile();
     if(ret)
     {
@@ -93,7 +97,23 @@ void  MainWindow::openPltFile()
 
         for(auto pl : data->polyline_list)
         {
-            QGraphicsItem *item = new QGraphicsPolygonItem(QPolygon(pl->getQPoints()));
+            auto pointfs = pl->getQPointFs();
+            QPainterPath path(pointfs[0]);
+            for(int i = 1; i <  pointfs.size();i++)
+            {
+                path.lineTo(pointfs[i]);
+            }
+
+            QAbstractGraphicsShapeItem *item = new QGraphicsPathItem(path);
+            QPen www(Qt::white);
+            //item->setPen(www);
+            if(!pl->getClosed())
+            {
+                QPen rrr(Qt::red);
+                QPen ggg(Qt::green);
+                item->setPen(cs%2 == 0 ? rrr:ggg);
+                cs++;
+            }
             scene->addItem(item);
         }
     }
