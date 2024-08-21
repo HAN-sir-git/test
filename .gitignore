@@ -1,0 +1,64 @@
+# Qt Build folders
+build-*/
+debug/
+release/
+
+# Qt Creator specific files
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.pro.user.version
+*.pro.user.version.*
+*.creator
+*.creator.user
+*.creator.user.*
+*.creator.version
+*.creator.version.*
+*.autosave
+*.user*
+
+# Qt Creator QML files
+*.qmlproject.user
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Generated files
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+Makefile*
+cmake_install.cmake
+CMakeLists.txt.user
+CMakeLists.txt.user.*
+
+# Qt Creator project files
+*.pro.user
+*.pri.user
+*.qmake.stash
+*.qmake.cache
+
+# Debugger settings
+*.ncb
+*.sdf
+*.vcproj*
+*.opensdf
+*.sln
+*.vcxproj*
+*.VC.db
+*.VC.opendb
+
+# Qt Installer Framework
+*.repogen_temp
+
+object_script.chip.Debug
+object_script.chip.Release

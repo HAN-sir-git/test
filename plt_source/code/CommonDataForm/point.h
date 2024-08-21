@@ -4,7 +4,7 @@
 #include "common_type.h"
 #include "entity.h"
 #include <QPointF>
-#include<cmath>>
+#include <cmath>
 struct PointData
 {
     PointData()  = default;
