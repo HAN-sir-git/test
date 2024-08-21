@@ -61,4 +61,4 @@ CMakeLists.txt.user.*
 *.repogen_temp
 
 object_script.chip.Debug
-object_script.chip.Debug
+object_script.chip.Release
