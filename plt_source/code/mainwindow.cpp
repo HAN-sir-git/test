@@ -79,14 +79,12 @@ MainWindow::MainWindow(QWidget *parent)
     populateScene();
     // 设置初始视口区域
 
+//    view->view()->setSceneRect(scene->sceneRect());
+//    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 
+   // saveSceneExample(scene,this);
 
-    view->view()->setSceneRect(scene->sceneRect());
-    view->view()->fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
-
-    //saveSceneExample(scene,this);
-
-   // exportSceneExample(scene,this);
+    exportSceneExample(scene,this);
 
 }
 
@@ -115,13 +113,13 @@ void  MainWindow::openPltFile()
             QAbstractGraphicsShapeItem *item = new QGraphicsPathItem(path);
             QPen www(Qt::white);
             //item->setPen(www);
-            if(!pl->getClosed())
-            {
-                QPen rrr(Qt::red);
-                QPen ggg(Qt::green);
-                item->setPen(cs%2 == 0 ? rrr:ggg);
-                cs++;
-            }
+//            if(!pl->getClosed())
+//            {
+//                QPen rrr(Qt::red);
+//                QPen ggg(Qt::green);
+//                item->setPen(cs%2 == 0 ? rrr:ggg);
+//                cs++;
+//            }
             scene->addItem(item);
         }
     }
@@ -132,17 +130,17 @@ void MainWindow::saveSceneToImage(QGraphicsScene *scene, const QString &filePath
     // 创建一个QImage对象，大小与场景相同
     QRectF sceneRect = scene->sceneRect();
     QSize imageSize(sceneRect.width(), sceneRect.height());
-    QImage image(imageSize, QImage::Format_ARGB32);
-    image.fill(Qt::white); // 可选：设置背景色
+    QImage* image = new QImage(imageSize, QImage::Format_Grayscale8);
+    image->fill(Qt::white); // 可选：设置背景色
 
     // 创建一个QPainter对象用于绘制
-    QPainter painter(&image);
+    QPainter painter(image);
 
     // 将QGraphicsScene内容渲染到QImage
     scene->render(&painter);
 
     // 保存图片到文件
-    image.save(filePath);
+    image->save(filePath);
 }
 
 void MainWindow::saveSceneExample(QGraphicsScene *scene, QWidget *parentWidget) {
@@ -175,11 +173,13 @@ void MainWindow::exportSceneInChunks(QGraphicsScene *scene, const QString &baseF
 
             // 创建QImage对象
             QSize imageSize(chunkSize);
-            QImage image(imageSize, QImage::Format_ARGB32);
-            image.fill(Qt::white);
 
-            // 创建QPainter对象
-            QPainter painter(&image);
+            QImage* image = new QImage(imageSize, QImage::Format_Grayscale8);
+            image->fill(Qt::white); // 可选：设置背景色
+
+            // 创建一个QPainter对象用于绘制
+            QPainter painter(image);
+
 
             // 渲染场景的一部分到QImage
             QGraphicsView view(scene);
@@ -188,7 +188,8 @@ void MainWindow::exportSceneInChunks(QGraphicsScene *scene, const QString &baseF
 
             // 保存每个分块的图像
             QString filePath = baseFilePath + QString("_%1_%2.png").arg(x).arg(y);
-            image.save(filePath);
+            image->save(filePath);
+
         }
     }
 }
@@ -197,7 +198,7 @@ void MainWindow::exportSceneExample(QGraphicsScene *scene, QWidget *parentWidget
     QString baseFilePath = QFileDialog::getSaveFileName(parentWidget, "Save Image Base Path", "", "Images (*.png)");
     if (baseFilePath.isEmpty()) return;
 
-    QSize chunkSize(2000, 2000); // 定义每个分块的大小
+    QSize chunkSize(10000, 10000); // 定义每个分块的大小
 
     exportSceneInChunks(scene, baseFilePath, chunkSize);
 }

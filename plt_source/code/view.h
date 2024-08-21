@@ -110,6 +110,9 @@ private:
     QToolButton *antialiasButton;
     QToolButton *printButton;
     QToolButton *resetButton;
+
+    QToolButton *openFileButton;
+    QToolButton *exportImageButton;
     QSlider *zoomSlider;
     QSlider *rotateSlider;
 };

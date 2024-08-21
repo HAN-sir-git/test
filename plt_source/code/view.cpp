@@ -168,6 +168,17 @@ View::View(const QString &name, QWidget *parent)
     printButton = new QToolButton;
     printButton->setIcon(QIcon(QPixmap(":/fileprint.png")));
 
+
+    // 添加打开文件按钮
+    openFileButton = new QToolButton;
+    openFileButton->setText(tr("Open File"));
+    openFileButton->setIcon(QIcon(QPixmap(":/image/open.png")));
+
+    // 添加导出图片按钮
+    exportImageButton = new QToolButton;
+    exportImageButton->setText(tr("Export Image"));
+    exportImageButton->setIcon(QIcon(QPixmap(":/image/saveImage.png")));
+
     // 互斥按钮组
     QButtonGroup *pointerModeGroup = new QButtonGroup(this);
     pointerModeGroup->setExclusive(true);
@@ -183,6 +194,8 @@ View::View(const QString &name, QWidget *parent)
     labelLayout->addWidget(antialiasButton);
     labelLayout->addWidget(openGlButton);
     labelLayout->addWidget(printButton);
+    labelLayout->addWidget(openFileButton);
+    labelLayout->addWidget(exportImageButton);
 
     QGridLayout *topLayout = new QGridLayout;
     topLayout->addLayout(labelLayout, 0, 0);
