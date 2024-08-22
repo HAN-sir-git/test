@@ -85,6 +85,11 @@ public:
     // 示例用法
     void exportSceneExample(QGraphicsScene *scene, QWidget *parentWidget);
 
+public:
+
+    //opencv做轮廓检测
+   // void opencvtest1(const QString& path);
+
     QGraphicsScene *scene;
     PltFileData *parser;
 };

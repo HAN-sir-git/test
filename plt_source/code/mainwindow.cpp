@@ -59,6 +59,7 @@
 #include <QSize>
 #include <qmath.h>
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
 {
@@ -82,9 +83,11 @@ MainWindow::MainWindow(QWidget *parent)
 //    view->view()->setSceneRect(scene->sceneRect());
 //    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 
-   // saveSceneExample(scene,this);
+    saveSceneExample(scene,this);
 
-    exportSceneExample(scene,this);
+    //exportSceneExample(scene,this);
+
+    //opencvtest1("D:/Plt_code/test/plt_source/image/ww.png_1_0.png");
 
 }
 
@@ -198,7 +201,9 @@ void MainWindow::exportSceneExample(QGraphicsScene *scene, QWidget *parentWidget
     QString baseFilePath = QFileDialog::getSaveFileName(parentWidget, "Save Image Base Path", "", "Images (*.png)");
     if (baseFilePath.isEmpty()) return;
 
-    QSize chunkSize(10000, 10000); // 定义每个分块的大小
+    QSize chunkSize(5000, 5000); // 定义每个分块的大小
 
     exportSceneInChunks(scene, baseFilePath, chunkSize);
 }
+
+
