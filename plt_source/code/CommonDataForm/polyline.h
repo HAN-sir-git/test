@@ -14,7 +14,7 @@ struct PolylineData
 
 
     QList<Point> points;
-    bool closed ;
+    bool closed = false;
     double width;
 };
 

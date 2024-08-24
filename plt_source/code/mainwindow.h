@@ -54,6 +54,8 @@
 #include <QWidget>
 #include "CommonDataForm/data.h"
 #include "CPltFileDataAnalysis/pltfiledata.h"
+#include "CustomGraphicsItem/customgraphicsheader.h"
+#include "geometryAnalysis/cgeometryanalysis.h"
 
 QT_BEGIN_NAMESPACE
 class QGraphicsScene;
@@ -73,6 +75,10 @@ private:
 public:
     // 工具栏函数部分
     void openPltFile();
+    // 遍历data 转换其中图元数据结构为QGraphicsItem
+    void populateSceneWithData(std::shared_ptr<ConvertData> data);
+
+
 
     void saveSceneToImage(QGraphicsScene *scene, const QString &filePath);
 
@@ -85,11 +91,18 @@ public:
     // 示例用法
     void exportSceneExample(QGraphicsScene *scene, QWidget *parentWidget);
 
+private:
+    // 转换多种格式
+    void ConvertPolyLine2Item(const PolyLinePtrList &polyLineList);
+
+    void ConvertPolyLine2path(const PolyLinePtrList &polyLineList);
+
+
 public:
 
     //opencv做轮廓检测
    // void opencvtest1(const QString& path);
-
+    CGeometryAnalysis* geometryParser;
     QGraphicsScene *scene;
     PltFileData *parser;
 };

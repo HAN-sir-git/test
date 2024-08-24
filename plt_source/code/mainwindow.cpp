@@ -58,6 +58,7 @@
 #include <QImage>
 #include <QSize>
 #include <qmath.h>
+#include <QGraphicsItem>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -69,6 +70,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     View *view = new View("view");
     view->view()->setScene(scene);
+
+    geometryParser = new CGeometryAnalysis(scene);
 
     QHBoxLayout *layout = new QHBoxLayout;
     layout->addWidget(view);
@@ -83,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent)
 //    view->view()->setSceneRect(scene->sceneRect());
 //    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 
-    saveSceneExample(scene,this);
+   // saveSceneExample(scene,this);
 
     //exportSceneExample(scene,this);
 
@@ -94,37 +97,131 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::populateScene()
 {
     openPltFile();
+    auto items = scene->items();
+    geometryParser->sortItemsByBoundingRectAreaDescending(items,geometryParser->m_Area2ItemMap);
+    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret =geometryParser->intersectItemsLoopCluster(items,scene);
+    for(int i = 0 ;i < ret.keys().size();i++)    
+    {
+        QPen rrr( i % 2 == 0 ? Qt::red:Qt::green);
+        auto key = ret.keys().at(i);
+        for(auto item: ret[key])
+        {
+           //转换item的类型，根据类型绘制不同的图元
+
+            int itemType = item->type();
+
+            if (itemType == QGraphicsPolygonItem::Type) {
+                QGraphicsPolygonItem *polygonItem = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
+                polygonItem->setPen(rrr);
+            } else if (itemType == QGraphicsLineItem::Type) {
+                QGraphicsLineItem *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
+                lineItem->setPen(rrr);
+            } else if (itemType == QGraphicsPathItem::Type) {
+                QGraphicsPathItem *pathItem = qgraphicsitem_cast<QGraphicsPathItem *>(item);
+                pathItem->setPen(rrr);
+            } else {
+                
+            }
+
+
+
+        }
+    }
 }
 
 void  MainWindow::openPltFile()
 {
-    static int cs = 0;
-    bool ret = parser->ParsePltFile();
-    if(ret)
+    if(parser->ParsePltFile())
     {
         auto data = parser->getPltData();
+        populateSceneWithData(data);
+    }
 
-        for(auto pl : data->polyline_list)
+}
+
+void MainWindow::populateSceneWithData(std::shared_ptr<ConvertData> data)
+{
+    ConvertPolyLine2Item(data->polyline_list);
+   // ConvertPolyLine2path(data->polyline_list);
+}
+
+void MainWindow::ConvertPolyLine2Item(const PolyLinePtrList &polyLineList)
+{
+    for(auto pl : polyLineList)
+    {
+        QGraphicsItem *item = nullptr;
+        auto points = pl->getQPointFs();
+        if(points.size() < 2)
         {
-            auto pointfs = pl->getQPointFs();
-            QPainterPath path(pointfs[0]);
-            for(int i = 1; i <  pointfs.size();i++)
-            {
-                path.lineTo(pointfs[i]);
-            }
-
-            QAbstractGraphicsShapeItem *item = new QGraphicsPathItem(path);
-            QPen www(Qt::white);
-            //item->setPen(www);
-//            if(!pl->getClosed())
-//            {
-//                QPen rrr(Qt::red);
-//                QPen ggg(Qt::green);
-//                item->setPen(cs%2 == 0 ? rrr:ggg);
-//                cs++;
-//            }
-            scene->addItem(item);
+            continue;
         }
+        if(pl->getClosed())
+        {
+            item = new CustomGraphicsPolygonItem(points);
+        }
+        else 
+        {
+            if(points.size() == 2)
+            {
+                item = new CustomGraphicsLineItem(QLineF(points[0],points[1]));
+            }else
+            {
+                QPainterPath path(points[0]);
+                for(int i = 1; i <  points.size();i++)
+                {
+                    path.lineTo(points[i]);
+                }
+                item = new CustomGraphicsPathItem(path);
+            }
+        }
+
+        for (auto child : pl->getChilds())
+        {
+           //根据child的类型，构造不同的图元
+            switch (child->rtti())
+            {
+                case COMMON_TYPE::LINE:
+                {
+                    auto line = std::dynamic_pointer_cast<Line>(child);
+                    //A方案 追加作为孩子项，但是不绘制，会影响图元的获取问题
+                    //CustomGraphicsLineItem *item1 = new CustomGraphicsLineItem(line->getLineF());
+                    //item1->setParentItem(item);
+
+                    // B方案 直接追加QLineF类型到item,指针类型强转公共接口基类
+                    CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+                    p->appendChildLine(line->getLineF());   
+                }
+                break;
+            }
+        }
+        scene->addItem(item);
+        // QPen www(Qt::white);
+        // //item->setPen(www);
+        // if(!pl->getClosed())
+        // {
+        //     QPen rrr(Qt::red);
+        //     QPen ggg(Qt::green);
+        //     item->setPen(0 == 0 ? rrr:ggg);
+        // }
+    }
+
+}
+
+void MainWindow::ConvertPolyLine2path(const PolyLinePtrList &polyLineList)
+{
+    for(auto pl : polyLineList)
+    {
+        QGraphicsItem *item = nullptr;
+        auto points = pl->getQPointFs();
+
+        QPainterPath path(points[0]);
+        for(int i = 1; i <  points.size();i++)
+        {
+            path.lineTo(points[i]);
+        }
+        item = new CustomGraphicsPathItem(path);
+        scene->addItem(item);
+
     }
 
 }

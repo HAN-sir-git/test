@@ -19,7 +19,7 @@ const QVector<QPoint> PolyLine::getQPoints()
 {
     QVector<QPoint> points;
     for (auto &p : data.points) {
-        points.append(p.getPointF().toPoint()/10);
+        points.append(p.getPointF().toPoint());
     }
     return points;
 }
@@ -28,11 +28,6 @@ void PolyLine::appendVertexs(const QList<Point> &vl)
 {
     if(!vl.size()) return;
         data.points = vl;
-    // 闭合与否
-    if(data.closed)
-    {
-       // data.points.append(vl.first());
-    }
 
     QPointF center;
     double r{0};
