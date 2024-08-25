@@ -74,17 +74,6 @@ public:
     // 工具栏函数部分
     void openPltFile();
 
-    void saveSceneToImage(QGraphicsScene *scene, const QString &filePath);
-
-    // 直接导出jpg或png
-    void saveSceneExample(QGraphicsScene *scene, QWidget *parentWidget);
-
-    // 分块导出后合并
-    void exportSceneInChunks(QGraphicsScene *scene, const QString &baseFilePath, const QSize &chunkSize);
-
-    // 示例用法
-    void exportSceneExample(QGraphicsScene *scene, QWidget *parentWidget);
-
 public:
 
     //opencv做轮廓检测

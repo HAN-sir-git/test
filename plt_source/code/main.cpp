@@ -111,10 +111,10 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
 
-   // MainWindow window;
-   // window.show();
+    MainWindow window;
+    window.show();
 
-    opencvtest1("D:/Plt_code/test/plt_source/image/ww.png_2_0.png");
+    //opencvtest1("D:/Plt_code/test/plt_source/image/ww.png_2_0.png");
 
     return app.exec();
 }

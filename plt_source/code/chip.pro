@@ -35,7 +35,9 @@ HEADERS += mainwindow.h view.h chip.h \
     CommonDataForm/line.h \
     CommonDataForm/common_mathfunc.h \
     CPltFileDataAnalysis/pltfiledata.h \
-    CommonDataForm/data.h
+    CommonDataForm/data.h \
+    OpencvAnalysis/cscenetoimage.h \
+    OpencvAnalysis/test.h
 
 
 SOURCES += main.cpp \
@@ -45,7 +47,8 @@ SOURCES += main.cpp \
     CommonDataForm/line.cpp \
     CommonDataForm/common_mathfunc.cpp \
     CPltFileDataAnalysis/pltfiledata.cpp \
-    CommonDataForm/data.cpp
+    CommonDataForm/data.cpp \
+    OpencvAnalysis/cscenetoimage.cpp
 
 
 SOURCES += mainwindow.cpp view.cpp chip.cpp
