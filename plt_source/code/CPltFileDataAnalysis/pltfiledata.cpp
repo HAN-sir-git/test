@@ -81,11 +81,7 @@ bool PltFileData::readPltGroups(QTextStream& stream)
 
             if (!PolyLinedata.points.empty()) {
                 // 闭合性判断
-                if(PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
-                {
-                    PolyLinedata.closed = true;
-                   // PolyLinedata.points.removeLast();
-                }
+                PolyLinedata.closed = PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF();
                 auto points = PolyLinedata.points;
                 std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
                 t->appendVertexs(points);
@@ -137,19 +133,18 @@ bool PltFileData::readPltGroups(QTextStream& stream)
         }
 
         if (pltReadTmp.startsWith("PG")) {
-            if (!PolyLinedata.points.empty()) {
+//            if (!PolyLinedata.points.empty()) {
 
 //                if(PolyLinedata.points.size() > 2 && PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
 //                {
 //                   PolyLinedata.closed = true;
-//                   PolyLinedata.points.removeLast();
 //                }
 //                auto points = PolyLinedata.points;
 //                std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
 //                PolyLinedata = PolylineData();
 //                t->appendVertexs(points);
 //                m_convertData->polyline_list.push_back(std::move(t));
-            }
+//            }
 
             xOffset += (xMax - xMin);
             isPageFirst = true;
@@ -159,11 +154,8 @@ bool PltFileData::readPltGroups(QTextStream& stream)
 
     if (!PolyLinedata.points.empty()) {
         // 闭合性判断
-        if( PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
-        {
-           PolyLinedata.closed = true;
-            //PolyLinedata.points.removeLast();
-        }
+        PolyLinedata.closed = PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF();
+
         auto points = PolyLinedata.points;
         std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
         t->appendVertexs(points);

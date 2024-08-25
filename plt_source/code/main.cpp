@@ -72,10 +72,16 @@ void opencvtest1(const QString& path)
     Mat binary;
     threshold(image, binary, 50, 128, THRESH_BINARY);
 
+
+    Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(15, 15));
+    morphologyEx(binary, binary, MORPH_CLOSE, kernel); // 形态学操作
+    morphologyEx(binary, binary, MORPH_OPEN, kernel);  // 形态学操作
+    imshow("morphology", binary);
+
     // 查找轮廓
     vector<vector<cv::Point>> contours;
     vector<Vec4i> hierarchy; // 必须添加 hierarchy 参数
-    findContours(binary, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+    findContours(binary, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
 
     if (contours.empty()) {
         std::cerr << "Error: No contours found." << std::endl;
@@ -86,18 +92,19 @@ void opencvtest1(const QString& path)
     Mat contourOutput = Mat::zeros(image.size(), CV_8UC3);
     for (size_t i = 0; i < contours.size(); i =i + 1) {
 
+
         int parentIdx = hierarchy[i][3]; // 获取父轮廓索引
         if (parentIdx != -1 && hierarchy[parentIdx][3] == -1) {
             // 当前轮廓是第二层轮廓
             Scalar color = Scalar(0, 255, 0); // 绿色
             drawContours(contourOutput, contours, static_cast<int>(i), color, 2);
         }
-        if(i == 10000) break;
+        if(i == 5000) break;
 
     }
 
     // 显示图像
-    namedWindow("Contours", WINDOW_AUTOSIZE);
+    namedWindow("Contours", WINDOW_NORMAL);
     imshow("Contours", contourOutput);
 
     waitKey(0); // 等待用户按键
@@ -115,6 +122,7 @@ int main(int argc, char *argv[])
     window.show();
 
     //opencvtest1("D:/Plt_code/test/plt_source/image/ww.png_2_0.png");
+    //opencvtest1("../image/ww.png_2_0.png");
 
     return app.exec();
 }

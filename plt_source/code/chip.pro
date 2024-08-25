@@ -13,13 +13,11 @@ QMAKE_CXXFLAGS += -Wno-unused-variable
 #    QMAKE_POST_LINK += $$quote(set PATH=$$OPENCV_PATH;%PATH%)
 #}
 
-#INCLUDEPATH += D:\software_package_pos\Third_Library\OpenCV\opencv\mingw810_64\install\include
-#LIBS += D:\software_package_pos\Third_Library\OpenCV\opencv\mingw810_64\lib\libopencv_*.a
 
-INCLUDEPATH += D:\software_package_pos\Third_Library\OpenCV\opencv\mingw810_64\install\include\
+INCLUDEPATH +=  D:\WorkSpace\github_project\plt\test\plt_source\code\install\include\
 
 
-LIBS += -L D:\software_package_pos\Third_Library\OpenCV\opencv\mingw810_64\install\x64\mingw\lib\libopencv_*.a
+LIBS += -L D:\WorkSpace\github_project\plt\test\plt_source\code\lib\libopencv_*.a
 
 
 
@@ -38,6 +36,12 @@ HEADERS += mainwindow.h view.h chip.h \
     CommonDataForm/data.h \
     OpencvAnalysis/cscenetoimage.h \
     OpencvAnalysis/test.h
+    geometryAnalysis/cgeometryanalysis.h \
+    CustomGraphicsItem/customgraphicslineitem.h \
+    CustomGraphicsItem/customgraphicspathitem.h \
+    CustomGraphicsItem/customgraphicspolygonitem.h \
+    CustomGraphicsItem/customgraphicsheader.h \
+    CustomGraphicsItem/customgraphicsitem.h
 
 
 SOURCES += main.cpp \
@@ -49,6 +53,11 @@ SOURCES += main.cpp \
     CPltFileDataAnalysis/pltfiledata.cpp \
     CommonDataForm/data.cpp \
     OpencvAnalysis/cscenetoimage.cpp
+    geometryAnalysis/cgeometryanalysis.cpp \
+    CustomGraphicsItem/customgraphicslineitem.cpp \
+    CustomGraphicsItem/customgraphicspathitem.cpp \
+    CustomGraphicsItem/customgraphicspolygonitem.cpp \
+    CustomGraphicsItem/customgraphicsitem.cpp
 
 
 SOURCES += mainwindow.cpp view.cpp chip.cpp

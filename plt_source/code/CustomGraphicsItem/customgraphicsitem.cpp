@@ -1,0 +1,22 @@
+#include "customgraphicsitem.h"
+
+
+void CustomGraphicsInterface::setChildLine(const QList<QLineF> &line)
+{
+    child_line = line;
+}
+
+QList<QLineF> CustomGraphicsInterface::childLine() const
+{
+    return child_line;
+}
+
+void CustomGraphicsInterface::appendChildLine(const QLineF &line)
+{
+    child_line.append(line);
+}
+
+void CustomGraphicsInterface::clearChildLine()
+{
+    child_line.clear();
+}
