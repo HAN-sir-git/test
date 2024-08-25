@@ -78,8 +78,6 @@ public:
     // 遍历data 转换其中图元数据结构为QGraphicsItem
     void populateSceneWithData(std::shared_ptr<ConvertData> data);
 
-
-
     void saveSceneToImage(QGraphicsScene *scene, const QString &filePath);
 
     // 直接导出jpg或png

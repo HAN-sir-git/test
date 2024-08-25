@@ -97,34 +97,46 @@ void MainWindow::populateScene()
 {
     openPltFile();
     auto items = scene->items();
-    geometryParser->sortItemsByBoundingRectAreaDescending(items,geometryParser->m_Area2ItemMap);
-    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret =geometryParser->intersectItemsLoopCluster(items,scene);
-    for(int i = 0 ;i < ret.keys().size();i++)    
+    QList<QGraphicsItem *> filter;
+    geometryParser->sortItemsByBoundingRectAreaDescending(items,geometryParser->m_Area2ItemMap,filter);
+    for(auto x :filter)
     {
-        QPen rrr( i % 2 == 0 ? Qt::red:Qt::green);
+        items.removeAll(x);
+        scene->removeItem(x);
+    }
+
+    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret =geometryParser->intersectItemsLoopCluster(items,scene,filter);
+    for(int i = 0 ;i < ret.keys().size();i++)
+    {
+        QPen rrr( i == 0 ? Qt::red:Qt::green);
         auto key = ret.keys().at(i);
-        for(auto item: ret[key])
-        {
-           //转换item的类型，根据类型绘制不同的图元
 
-            int itemType = item->type();
+        // 绘制边框
+        auto rectitem = new QGraphicsRectItem(key->boundingRect());
 
-            if (itemType == QGraphicsPolygonItem::Type) {
-                QGraphicsPolygonItem *polygonItem = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
-                polygonItem->setPen(rrr);
-            } else if (itemType == QGraphicsLineItem::Type) {
-                QGraphicsLineItem *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
-                lineItem->setPen(rrr);
-            } else if (itemType == QGraphicsPathItem::Type) {
-                QGraphicsPathItem *pathItem = qgraphicsitem_cast<QGraphicsPathItem *>(item);
-                pathItem->setPen(rrr);
-            } else {
+        rectitem->setPen(rrr);
+        scene->addItem(rectitem);
+
+
+//        for(auto item: ret[key])
+//        {
+//           //转换item的类型，根据类型绘制不同的图元
+//            int itemType = item->type();
+
+
+//            if (itemType == QGraphicsPolygonItem::Type) {
+//                QGraphicsPolygonItem *polygonItem = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
+//                polygonItem->setPen(rrr);
+//            } else if (itemType == QGraphicsLineItem::Type) {
+//                QGraphicsLineItem *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
+//                lineItem->setPen(rrr);
+//            } else if (itemType == QGraphicsPathItem::Type) {
+//                QGraphicsPathItem *pathItem = qgraphicsitem_cast<QGraphicsPathItem *>(item);
+//                pathItem->setPen(rrr);
+//            } else {
                 
-            }
-
-
-
-        }
+//            }
+//        }
     }
 }
 
@@ -133,15 +145,15 @@ void  MainWindow::openPltFile()
     if(parser->ParsePltFile())
     {
         auto data = parser->getPltData();
-        populateSceneWithData(data);
+       populateSceneWithData(data);
     }
 
 }
 
 void MainWindow::populateSceneWithData(std::shared_ptr<ConvertData> data)
 {
-    ConvertPolyLine2Item(data->polyline_list);
-   // ConvertPolyLine2path(data->polyline_list);
+   // ConvertPolyLine2Item(data->polyline_list);
+    ConvertPolyLine2path(data->polyline_list);
 }
 
 void MainWindow::ConvertPolyLine2Item(const PolyLinePtrList &polyLineList)

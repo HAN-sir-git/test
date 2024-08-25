@@ -20,14 +20,14 @@ public:
     ~CGeometryAnalysis();
 
     // 对场景图元根据矩形面积进行排序 从大到小 并建立Map
-    void sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map);
+    void sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map,QList<QGraphicsItem *> &filteritemlist);
 
     // 将真正相交的图元进行聚类，返回聚类结果
     // items 为待聚类的图元,已经按照面积从大到小排序
-    QMap<QGraphicsItem*,QGraphicsItemListPtr> intersectItemsSingleCluster(QList<QGraphicsItem *> &itemlist,QGraphicsScene *scene);
+    QMap<QGraphicsItem*,QGraphicsItemListPtr> intersectItemsSingleCluster(QList<QGraphicsItem *> &itemlist,QGraphicsScene *scene,QList<QGraphicsItem *> &filteritemlist);
 
 
-    QMap<QGraphicsItem*,QGraphicsItemListPtr> intersectItemsLoopCluster(QList<QGraphicsItem *> &itemlist,QGraphicsScene *scene);
+    QMap<QGraphicsItem*,QGraphicsItemListPtr> intersectItemsLoopCluster(QList<QGraphicsItem *> &itemlist,QGraphicsScene *scene,QList<QGraphicsItem *> &filteritemlist);
 
     // 对一个图元进行单次聚类不外扩,所以需要最后做一次并集操作
     QGraphicsItemListPtr  singleCluster(QGraphicsItem *item, QGraphicsScene *scene,QSet<QGraphicsItem *>& clusteredItems);

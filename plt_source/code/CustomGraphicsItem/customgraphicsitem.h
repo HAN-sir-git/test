@@ -2,6 +2,7 @@
 #define CUSTOMGRAPHICSITEM_H
 
 #include <QGraphicsItem>
+#include <QLineF>
 class CustomGraphicsInterface {
 public:
     CustomGraphicsInterface() {}

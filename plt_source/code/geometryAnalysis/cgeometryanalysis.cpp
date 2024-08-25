@@ -6,18 +6,23 @@ CGeometryAnalysis::CGeometryAnalysis(QGraphicsScene *scene)
 {
     m_scene = scene;
     m_Area2ItemMap.clear();
-}
-
+};
 CGeometryAnalysis::~CGeometryAnalysis()
 {
 }
 
-void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map)
+void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map, QList<QGraphicsItem *> &filteritemlist)
 {
     map.clear();
+    auto maxArea = m_scene->sceneRect().width() * m_scene->sceneRect().height() * 0.9;
     for (QGraphicsItem *item : items)
     {
-        map[qCeil(item->boundingRect().width() * item->boundingRect().height())].append(item);
+        auto area = qCeil(item->boundingRect().width() * item->boundingRect().height());
+        if(area >= maxArea)
+        {
+            filteritemlist.append(item);
+        }
+        map[area].append(item);
     }
     QList<int> keys = map.keys();
     qSort(keys.begin(), keys.end(), qGreater<int>());
@@ -28,10 +33,11 @@ void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsIte
     }
 }
 
-QMap<QGraphicsItem*,QGraphicsItemListPtr> CGeometryAnalysis::intersectItemsSingleCluster(QList<QGraphicsItem *> &itemlist,QGraphicsScene *scene)
+QMap<QGraphicsItem*,QGraphicsItemListPtr> CGeometryAnalysis::intersectItemsSingleCluster(QList<QGraphicsItem *> &itemlist,
+                                                                                           QGraphicsScene *scene,QList<QGraphicsItem *> &filteritemlist)
 {
     // 用于过滤掉已经聚类的图元
-    QSet<QGraphicsItem *> clusteredItems;
+    QSet<QGraphicsItem *> clusteredItems = filteritemlist.toSet();
 
     // 结果集合
     QMap<QGraphicsItem*,QGraphicsItemListPtr> clusters;
@@ -50,10 +56,11 @@ QMap<QGraphicsItem*,QGraphicsItemListPtr> CGeometryAnalysis::intersectItemsSingl
     return clusters;
 }
 
-QMap<QGraphicsItem *, QGraphicsItemListPtr> CGeometryAnalysis::intersectItemsLoopCluster(QList<QGraphicsItem *> & itemlist, QGraphicsScene * scene)
+QMap<QGraphicsItem *, QGraphicsItemListPtr> CGeometryAnalysis::intersectItemsLoopCluster(QList<QGraphicsItem *> & itemlist,
+                                                                                         QGraphicsScene * scene,QList<QGraphicsItem *> &filteritemlist)
 {
         // 用于过滤掉已经聚类的图元
-    QSet<QGraphicsItem *> clusteredItems;
+    QSet<QGraphicsItem *> clusteredItems = filteritemlist.toSet();
 
     // 结果集合
     QMap<QGraphicsItem*,QGraphicsItemListPtr> clusters;

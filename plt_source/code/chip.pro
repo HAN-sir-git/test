@@ -14,10 +14,10 @@ QMAKE_CXXFLAGS += -Wno-unused-variable
 #}
 
 
-INCLUDEPATH +=  D:\WorkSpace\github_project\plt\test\plt_source\code\install\include\
+INCLUDEPATH +=  $$PWD\install\include\
 
 
-LIBS += -L D:\WorkSpace\github_project\plt\test\plt_source\code\lib\libopencv_*.a
+LIBS += -L $$PWD\lib\libopencv_*.a
 
 
 
@@ -34,14 +34,14 @@ HEADERS += mainwindow.h view.h chip.h \
     CommonDataForm/common_mathfunc.h \
     CPltFileDataAnalysis/pltfiledata.h \
     CommonDataForm/data.h \
-    OpencvAnalysis/cscenetoimage.h \
-    OpencvAnalysis/test.h
     geometryAnalysis/cgeometryanalysis.h \
     CustomGraphicsItem/customgraphicslineitem.h \
     CustomGraphicsItem/customgraphicspathitem.h \
     CustomGraphicsItem/customgraphicspolygonitem.h \
     CustomGraphicsItem/customgraphicsheader.h \
-    CustomGraphicsItem/customgraphicsitem.h
+    CustomGraphicsItem/customgraphicsitem.h \
+    OpencvAnalysis\cscenetoimage.h
+
 
 
 SOURCES += main.cpp \
@@ -52,12 +52,12 @@ SOURCES += main.cpp \
     CommonDataForm/common_mathfunc.cpp \
     CPltFileDataAnalysis/pltfiledata.cpp \
     CommonDataForm/data.cpp \
-    OpencvAnalysis/cscenetoimage.cpp
     geometryAnalysis/cgeometryanalysis.cpp \
     CustomGraphicsItem/customgraphicslineitem.cpp \
     CustomGraphicsItem/customgraphicspathitem.cpp \
     CustomGraphicsItem/customgraphicspolygonitem.cpp \
-    CustomGraphicsItem/customgraphicsitem.cpp
+    CustomGraphicsItem/customgraphicsitem.cpp \
+    OpencvAnalysis\cscenetoimage.cpp
 
 
 SOURCES += mainwindow.cpp view.cpp chip.cpp
@@ -74,4 +74,3 @@ build_all:!build_pass {
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/widgets/graphicsview/chip
 INSTALLS += target
-

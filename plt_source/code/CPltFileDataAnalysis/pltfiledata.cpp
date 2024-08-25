@@ -106,11 +106,11 @@ bool PltFileData::readPltGroups(QTextStream& stream)
                     if (xMax < x) xMax = x;
                 }
             }
-
             continue;
+
         }
 
-        if (pltReadTmp.startsWith("PD")) {
+        if (pltReadTmp.startsWith("PD") || pltReadTmp.startsWith("PA")) {
             pltReadTmp.remove(0, 2);
             if (pltReadTmp.contains(",")) splitChar = ",";
             else splitChar = " ";
@@ -133,20 +133,15 @@ bool PltFileData::readPltGroups(QTextStream& stream)
         }
 
         if (pltReadTmp.startsWith("PG")) {
-//            if (!PolyLinedata.points.empty()) {
-
-//                if(PolyLinedata.points.size() > 2 && PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF())
-//                {
-//                   PolyLinedata.closed = true;
-//                }
-//                auto points = PolyLinedata.points;
-//                std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
-//                PolyLinedata = PolylineData();
-//                t->appendVertexs(points);
-//                m_convertData->polyline_list.push_back(std::move(t));
-//            }
-
-            xOffset += (xMax - xMin);
+            if (!PolyLinedata.points.empty()) {
+                PolyLinedata.closed = PolyLinedata.points.first().getPointF() == PolyLinedata.points.last().getPointF();
+                auto points = PolyLinedata.points;
+                std::shared_ptr<PolyLine> t = std::make_shared<PolyLine>(PolyLinedata.points,PolyLinedata.closed);
+                PolyLinedata = PolylineData();
+                t->appendVertexs(points);
+                m_convertData->polyline_list.push_back(std::move(t));
+            }
+            xOffset += xMax - xMin;
             isPageFirst = true;
             continue;
         }
