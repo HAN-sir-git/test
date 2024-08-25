@@ -40,7 +40,7 @@ HEADERS += mainwindow.h view.h chip.h \
     CustomGraphicsItem/customgraphicspolygonitem.h \
     CustomGraphicsItem/customgraphicsheader.h \
     CustomGraphicsItem/customgraphicsitem.h \
-    OpencvAnalysis\cscenetoimage.h
+    OpencvAnalysis/cscenetoimage.h
 
 
 
@@ -57,7 +57,7 @@ SOURCES += main.cpp \
     CustomGraphicsItem/customgraphicspathitem.cpp \
     CustomGraphicsItem/customgraphicspolygonitem.cpp \
     CustomGraphicsItem/customgraphicsitem.cpp \
-    OpencvAnalysis\cscenetoimage.cpp
+    OpencvAnalysis/cscenetoimage.cpp
 
 
 SOURCES += mainwindow.cpp view.cpp chip.cpp
