@@ -106,16 +106,52 @@ void MainWindow::populateScene()
     }
 
     QMap<QGraphicsItem*, QGraphicsItemListPtr> ret =geometryParser->intersectItemsLoopCluster(items,scene,filter);
-    for(int i = 0 ;i < ret.keys().size();i++)
+
+    QMap<QGraphicsItem*, QList<QLineF>> item2Lines = geometryParser->convertToLineMap(ret);
+
+    for(auto itemkey: item2Lines.keys())
     {
-        QPen rrr( i == 0 ? Qt::red:Qt::green);
-        auto key = ret.keys().at(i);
+        QMap<QPointF, QSet<QPointF> > neighborhood;
+        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
+        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
+        auto contourPoints = geometryParser->findContour(startp,neighborhood);
 
-        // 绘制边框
-        auto rectitem = new QGraphicsRectItem(key->boundingRect());
+        if(contourPoints.empty()) continue;
+        QPainterPath path(contourPoints[0]/10);
+        for(int i = 1; i <  contourPoints.size();i++)
+        {
+            path.lineTo(contourPoints[i]/10);
+        }
+        auto item = new CustomGraphicsPathItem(path);
+        QPen rrr( Qt::red);
+        item->setPen(rrr);
+        scene->addItem(item);
 
-        rectitem->setPen(rrr);
-        scene->addItem(rectitem);
+//        for(int i = 0; i <  breaklines.size();i++)
+//        {
+//            auto item = new CustomGraphicsLineItem(QLineF(breaklines[i].p1()/10,breaklines[i].p2()/10));
+//            QPen rrr( Qt::red);
+//            item->setPen(rrr);
+//            scene->addItem(item);
+//        }
+
+
+
+//        break;
+
+    }
+
+
+//    for(int i = 0 ;i < ret.keys().size();i++)
+//    {
+//        QPen rrr( i == 0 ? Qt::red:Qt::green);
+//        auto key = ret.keys().at(i);
+
+//        // 绘制边框
+//        auto rectitem = new QGraphicsRectItem(key->boundingRect());
+
+//        rectitem->setPen(rrr);
+//        scene->addItem(rectitem);
 
 
 //        for(auto item: ret[key])
@@ -137,7 +173,7 @@ void MainWindow::populateScene()
                 
 //            }
 //        }
-    }
+//    }
 }
 
 void  MainWindow::openPltFile()
@@ -152,8 +188,8 @@ void  MainWindow::openPltFile()
 
 void MainWindow::populateSceneWithData(std::shared_ptr<ConvertData> data)
 {
-   // ConvertPolyLine2Item(data->polyline_list);
-    ConvertPolyLine2path(data->polyline_list);
+   ConvertPolyLine2Item(data->polyline_list);
+    //ConvertPolyLine2path(data->polyline_list);
 }
 
 void MainWindow::ConvertPolyLine2Item(const PolyLinePtrList &polyLineList)

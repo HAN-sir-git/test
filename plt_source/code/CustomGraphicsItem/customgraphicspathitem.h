@@ -10,6 +10,9 @@ class CustomGraphicsPathItem : public QGraphicsPathItem  , public CustomGraphics
 public:
     CustomGraphicsPathItem(QGraphicsItem *parent = nullptr);
     CustomGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent = nullptr);
+
+    QVector<QLineF> pathToLines(const QPainterPath& path);
+
 };
 
 #endif // CUSTOMGRAPHICSPATHITEM_H

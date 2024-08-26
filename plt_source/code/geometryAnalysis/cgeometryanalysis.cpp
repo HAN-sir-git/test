@@ -2,11 +2,31 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QPainterPath>
+#include "CustomGraphicsItem/customgraphicsitem.h"
+#include <cmath>
+#include <algorithm>
+
+
+bool operator<(const QPointF& p1, const QPointF& p2) {
+    if (p1.x() < p2.x()) return true;
+    if (p1.x() > p2.x()) return false;
+    return p1.y() < p2.y();
+}
+
+uint qHash(const QPointF &key, uint seed = 0) {
+    return qHash(qRound(key.x()), seed) ^ qHash(qRound(key.y()), seed);
+}
+
+bool pointsAreClose(const QPointF& p1, const QPointF& p2, qreal epsilon = 0.0001) {
+    return std::abs(p1.x() - p2.x()) < epsilon && std::abs(p1.y() - p2.y()) < epsilon;
+}
+
 CGeometryAnalysis::CGeometryAnalysis(QGraphicsScene *scene)
 {
     m_scene = scene;
     m_Area2ItemMap.clear();
-};
+}
+
 CGeometryAnalysis::~CGeometryAnalysis()
 {
 }
@@ -160,6 +180,252 @@ QGraphicsItemListPtr CGeometryAnalysis::loopCluster(QGraphicsItem * item, QGraph
         }
     }
     return cluster;
+}
+
+QMap<QGraphicsItem *, QList<QLineF> > CGeometryAnalysis::convertToLineMap(const QMap<QGraphicsItem *, QGraphicsItemListPtr> &inputMap) {
+    QMap<QGraphicsItem*, QList<QLineF>> lineMap;
+
+    // 遍历输入的 QMap
+    for (auto it = inputMap.constBegin(); it != inputMap.constEnd(); ++it) {
+        QGraphicsItem* keyItem = it.key();
+        QGraphicsItemListPtr itemListPtr = it.value();
+
+        QList<QLineF> lineList;
+
+        // 遍历 QGraphicsItemListPtr 中的每个 QGraphicsItem
+        for (QGraphicsItem* item : itemListPtr) {
+            if (item && dynamic_cast<CustomGraphicsInterface*>(item)) {
+                CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+                lineList.append(p->childLine());
+            }
+        }
+
+        // 将结果添加到新的 QMap 中
+        lineMap.insert(keyItem, lineList);
+    }
+
+    return lineMap;
+}
+
+
+QPointF CGeometryAnalysis::findIntersection(const QLineF &line1, const QLineF &line2, bool &intersect)
+{
+    QPointF intersectionPoint;
+    QLineF::IntersectionType type = line1.intersect(line2, &intersectionPoint);
+    intersect = (type == QLineF::BoundedIntersection);
+    return intersectionPoint;
+}
+
+void CGeometryAnalysis::findAllIntersections(const QList<QLineF> &lines, QVector<QList<QPointF> > &intersections) {
+    for (int i = 0; i < lines.size(); ++i) {
+        for (int j = i + 1; j < lines.size(); ++j) {
+            bool intersect = false;
+            QPointF intersection = findIntersection(lines[i], lines[j], intersect);
+            if (intersect) {
+                intersections[i].append(intersection);
+                intersections[j].append(intersection);
+            }
+        }
+    }
+}
+
+void CGeometryAnalysis::splitLines(const QList<QLineF> &lines, const QVector<QList<QPointF> > &intersections, QList<QLineF> &brokenLines) {
+    for (int i = 0; i < lines.size(); ++i) {
+        QList<QPointF> points = { lines[i].p1(), lines[i].p2() };
+        points.append(intersections[i]);
+
+        // 对点进行排序
+        std::sort(points.begin(), points.end(), [](const QPointF& a, const QPointF& b) {
+            return (a.x() < b.x()) || (a.x() == b.x() && a.y() < b.y());
+        });
+
+        // 创建新的线段
+        for (int k = 0; k < points.size() - 1; ++k) {
+            if (points[k] != points[k + 1]) {
+                QLineF newLine(points[k], points[k + 1]);
+                brokenLines.append(newLine);
+            }
+        }
+    }
+}
+
+void CGeometryAnalysis::updateNeighborhood(const QList<QLineF> &lines, QMap<QPointF, QSet<QPointF> > &neighborhood) {
+    neighborhood.clear();
+    // 更新连通性
+    for (const QLineF& segment : lines) {
+        neighborhood[segment.p1()].insert(segment.p2());
+        neighborhood[segment.p2()].insert(segment.p1());
+    }
+
+}
+
+QList<QLineF> CGeometryAnalysis::breakLinesByIntersectionFromFuncs(const QList<QLineF> &lines, QMap<QPointF, QSet<QPointF> > &neighborhood) {
+    QList<QLineF> brokenLines;
+    QVector<QList<QPointF>> intersections(lines.size());
+    QMap<QPointF, QSet<QPointF>> pointMap;
+
+    // 找到所有交点
+    findAllIntersections(lines, intersections);
+
+    // 对线段进行打断并记录新线段
+    splitLines(lines, intersections, brokenLines);
+
+    // 更新邻域关系
+    updateNeighborhood(brokenLines, neighborhood);
+
+    return brokenLines;
+}
+
+QPointF CGeometryAnalysis::findBottomLeftPoint(const QList<QPointF> &points) {
+    if (points.isEmpty()) {
+        return QPointF(); // 返回无效点或处理空情况
+    }
+
+    QPointF bottomLeft = points.first();
+
+    for (const QPointF& point : points) {
+        // 如果 x 更小，更新左下角点
+        if (point.x() < bottomLeft.x() ||
+                (point.x() == bottomLeft.x() && point.y() < bottomLeft.y())) {
+            bottomLeft = point;
+        }
+    }
+
+    return bottomLeft;
+}
+
+qreal CGeometryAnalysis::angleBetweenLists(const QPointF &referenceList, const QPointF &List) {
+    // 计算点积
+        qreal dotProduct = referenceList.x() * List.x() + referenceList.y() * List.y();
+
+        // 计算向量的模长
+        qreal magnitude1 = std::sqrt(referenceList.x() * referenceList.x() + referenceList.y() * referenceList.y());
+        qreal magnitude2 = std::sqrt(List.x() * List.x() + List.y() * List.y());
+
+        // 计算余弦值
+        qreal cosTheta = dotProduct / (magnitude1 * magnitude2);
+        cosTheta = std::max(-1.0, std::min(cosTheta, 1.0));  // 防止浮点误差
+
+        // 计算角度（弧度）
+        qreal angle = std::acos(cosTheta);
+
+        // 计算向量的叉积
+        qreal crossProduct = referenceList.x() * List.y() - referenceList.y() * List.x();
+
+        // 判断角度的方向，调整为0到360度的逆时针夹角
+        qreal angleInDegrees = qRadiansToDegrees(angle);
+        if (crossProduct < 0) {
+            angleInDegrees = 360.0 - angleInDegrees;
+        }
+
+        return angleInDegrees;
+}
+
+QList<QPointF> CGeometryAnalysis::findContour(const QPointF &startPoint, const QMap<QPointF, QSet<QPointF> > &pointNeighborhood) {
+    QList<QPointF> contourPoints;
+    QSet<QPointF> filterPoints;
+    QPointF currentPoint = startPoint;
+    contourPoints.append(startPoint);
+    filterPoints.insert(startPoint);
+    // 初始参考向量
+    QPointF referenceList(QPointF(startPoint.x() -1,startPoint.y())- startPoint); // 从左下角点指向 (0, 0)
+
+    int i = 0;
+    while (pointNeighborhood.contains(currentPoint)) {
+        QPointF maxPoint;
+        qreal maxAngle = 361;
+        // 遍历邻域点，计算角度
+        for (const QPointF& neighbor : pointNeighborhood.value(currentPoint)) {
+            if (neighbor == currentPoint) {
+                continue; // 忽略自己
+            }
+            // 忽略找过的方向,但是最后会找回来，此时咋办
+            if (filterPoints.contains(neighbor) )
+            {
+                continue;
+            }
+
+            QPointF List = neighbor - currentPoint;
+            qreal angle = angleBetweenLists(referenceList, List);
+
+            // 更新最大角度向量
+            if (angle < maxAngle && pointNeighborhood.contains(neighbor)) {
+                maxAngle = angle;
+                maxPoint = neighbor;
+            }
+        }
+
+        if (i == 793 /*&& maxPoint == startPoint*/ ) {
+            contourPoints.append(startPoint);
+            break; // 没有更多的点可以选择
+        }
+        // 回退向量
+        if (maxPoint.isNull()) {
+            if(contourPoints.size() > 2)
+            {
+                contourPoints.removeLast();
+                currentPoint = contourPoints[contourPoints.size()-1];
+                referenceList = contourPoints[contourPoints.size()-2] - currentPoint;
+            }else {
+                break;
+            }
+
+        }else
+        {
+            // 添加到轮廓点
+            contourPoints.append(maxPoint);
+            filterPoints.insert(maxPoint);
+            // 更新当前点和参考向量
+            referenceList = currentPoint - maxPoint; // 从新点指向当前点的向量
+            currentPoint = maxPoint; // 更新当前点为新点
+        }
+        i++;
+    }
+
+    return contourPoints;
+}
+
+QList<QLineF> CGeometryAnalysis::breakLinesByIntersections(const QList<QLineF> &lines, QMap<QPointF, QSet<QPointF> > &neighborhood)
+{
+    QList<QLineF> brokenLines;
+    QMap<QPointF, QSet<QPointF>> pointMap;
+    QVector<QList<QPointF>> intersections(lines.size());
+    // 找到所有交点
+    for (int i = 0; i < lines.size(); ++i) {
+        for (int j = i + 1; j < lines.size(); ++j) {
+            bool intersect = false;
+            QPointF intersection = findIntersection(lines[i], lines[j], intersect);
+            if (intersect) {
+                intersections[i].append(intersection);
+                intersections[j].append(intersection);
+            }
+        }
+    }
+
+    // 对每条线段打断
+    for (int i = 0; i < lines.size(); ++i) {
+        QList<QPointF> points = { lines[i].p1(), lines[i].p2() };
+        points.append(intersections[i]);
+
+        // 对点进行排序
+        std::sort(points.begin(), points.end(), [](const QPointF& a, const QPointF& b) {
+            return (a.x() < b.x()) || (a.x() == b.x() && a.y() < b.y());
+        });
+
+        // 创建新的线段
+        for (int k = 0; k < points.size() - 1; ++k) {
+            if (points[k] != points[k + 1]) {
+                QLineF newLine(points[k], points[k + 1]);
+                brokenLines.append(newLine);
+
+                // 更新邻域关系
+                pointMap[points[k].toPoint()].insert(points[k + 1].toPoint());
+                pointMap[points[k + 1].toPoint()].insert(points[k].toPoint());
+            }
+        }
+    }
+    neighborhood = pointMap;
+    return brokenLines;
 }
 
 QMap<QGraphicsItem *, QGraphicsItemListPtr> CGeometryAnalysis::singleClusterExpand(QMap<QGraphicsItem *, QGraphicsItemListPtr> singleClusterMap)
