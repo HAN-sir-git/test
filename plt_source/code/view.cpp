@@ -89,6 +89,9 @@ View::View(const QString &name, QWidget *parent)
     graphicsView->setOptimizationFlags(QGraphicsView::DontSavePainterState);
     graphicsView->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
     graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+//    setFlags(ItemIsSelectable | ItemIsMovable);
+//    //启用了图形项的鼠标悬停事件。如果用户将鼠标悬停在此图形项上，它可以捕获并响应鼠标悬停事件。
+//    setAcceptHoverEvents(true);
 
     // 获取工具栏上图标的标准大小。
     int size = style()->pixelMetric(QStyle::PM_ToolBarIconSize);

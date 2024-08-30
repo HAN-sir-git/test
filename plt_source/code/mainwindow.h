@@ -58,7 +58,7 @@
 #include "geometryAnalysis/cgeometryanalysis.h"
 
 QT_BEGIN_NAMESPACE
-class QGraphicsScene;
+class CGraphicsScene;
 QT_END_NAMESPACE
 
 class MainWindow : public QWidget
@@ -101,7 +101,7 @@ public:
     //opencv做轮廓检测
    // void opencvtest1(const QString& path);
     CGeometryAnalysis* geometryParser;
-    QGraphicsScene *scene;
+    CGraphicsScene *scene;
     PltFileData *parser;
 };
 

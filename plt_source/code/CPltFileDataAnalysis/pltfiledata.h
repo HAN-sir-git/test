@@ -18,9 +18,12 @@ public:
     bool ParsePltFile();
     // 获取解析后的数据
     std::shared_ptr<ConvertData >getPltData();
+        QRectF getBox();
 private:
     bool getStrippedPltQt(QString& line, QTextStream& stream);
     bool readPltGroups(QTextStream& stream);
+
+
 
 public:
     std::shared_ptr<ConvertData> m_convertData{nullptr};

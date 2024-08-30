@@ -31,16 +31,55 @@ CGeometryAnalysis::~CGeometryAnalysis()
 {
 }
 
-void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map, QList<QGraphicsItem *> &filteritemlist)
+bool CGeometryAnalysis::isLineCollinearWithRectangleEdge(const QLineF &line, const QRectF &rect) {
+    // 获取矩形的四条边的y或x坐标
+    double topY = rect.top();
+    double bottomY = rect.bottom();
+    double leftX = rect.left();
+    double rightX = rect.right();
+
+    // 检查线段是否水平且共线
+    if (line.dy() == 0) {
+        if (line.y1() == topY || line.y1() == bottomY) {
+            return true;
+        }
+    }
+
+    // 检查线段是否竖直且共线
+    if (line.dx() == 0) {
+        if (line.x1() == leftX || line.x1() == rightX) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map, QList<QGraphicsItem *> &filteritemlist, QRectF box)
 {
     map.clear();
     auto maxArea = m_scene->sceneRect().width() * m_scene->sceneRect().height() * 0.9;
+    auto rect = m_scene->sceneRect();
     for (QGraphicsItem *item : items)
     {
+
+        auto *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
+        if(lineItem )
+        {
+            auto l = lineItem->line();
+            auto b = isLineCollinearWithRectangleEdge(l,box);
+            if(b || l.length() > box.width()*0.8)
+            {
+                filteritemlist.append(item);
+                continue;
+            }
+        }
+
         auto area = qCeil(item->boundingRect().width() * item->boundingRect().height());
-        if(area >= maxArea)
+        if(area >= maxArea * 0.9)
         {
             filteritemlist.append(item);
+            continue;
         }
         map[area].append(item);
     }
@@ -325,13 +364,15 @@ QList<QPointF> CGeometryAnalysis::findContour(const QPointF &startPoint, const Q
     QList<QPointF> contourPoints;
     QSet<QPointF> filterPoints;
     QPointF currentPoint = startPoint;
+    QPointF old_currentPoint = QPointF(startPoint.x() -1,startPoint.y());
     contourPoints.append(startPoint);
     filterPoints.insert(startPoint);
     // 初始参考向量
-    QPointF referenceList(QPointF(startPoint.x() -1,startPoint.y())- startPoint); // 从左下角点指向 (0, 0)
+    QPointF referenceList(old_currentPoint- startPoint); // 从左下角点指向 (0, 0)
 
     int i = 0;
-    while (pointNeighborhood.contains(currentPoint)) {
+    bool end = false;
+    while (pointNeighborhood.contains(currentPoint) && !end) {
         QPointF maxPoint;
         qreal maxAngle = 361;
         // 遍历邻域点，计算角度
@@ -340,8 +381,14 @@ QList<QPointF> CGeometryAnalysis::findContour(const QPointF &startPoint, const Q
                 continue; // 忽略自己
             }
             // 忽略找过的方向,但是最后会找回来，此时咋办
-            if (filterPoints.contains(neighbor) )
+            if (filterPoints.contains(neighbor))
             {
+                if(neighbor == startPoint && neighbor != old_currentPoint)
+                {
+                     end = true;
+                     contourPoints.append(startPoint);
+                     break;
+                }
                 continue;
             }
 
@@ -355,9 +402,8 @@ QList<QPointF> CGeometryAnalysis::findContour(const QPointF &startPoint, const Q
             }
         }
 
-        if (i == 793 /*&& maxPoint == startPoint*/ ) {
-            contourPoints.append(startPoint);
-            break; // 没有更多的点可以选择
+        if (end) {
+            break;
         }
         // 回退向量
         if (maxPoint.isNull()) {
@@ -377,6 +423,7 @@ QList<QPointF> CGeometryAnalysis::findContour(const QPointF &startPoint, const Q
             filterPoints.insert(maxPoint);
             // 更新当前点和参考向量
             referenceList = currentPoint - maxPoint; // 从新点指向当前点的向量
+            old_currentPoint = currentPoint;
             currentPoint = maxPoint; // 更新当前点为新点
         }
         i++;

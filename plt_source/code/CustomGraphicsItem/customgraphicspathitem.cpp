@@ -1,15 +1,44 @@
 #include "customgraphicspathitem.h"
 
 #include <QPainterPath>
+#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneWheelEvent>
+#include <QCursor>
 
 CustomGraphicsPathItem::CustomGraphicsPathItem(QGraphicsItem *parent): QGraphicsPathItem(parent)
 {
+    setFlag(QGraphicsItem::ItemIsMovable);
+    setFlag(QGraphicsItem::ItemIsSelectable);
+    setFlag(QGraphicsItem::ItemIsFocusable);
 }
 
 CustomGraphicsPathItem::CustomGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent)
     : QGraphicsPathItem(path, parent)
 {
+    setFlag(QGraphicsItem::ItemIsMovable);
+    setFlag(QGraphicsItem::ItemIsSelectable);
+    setFlag(QGraphicsItem::ItemIsFocusable);
 }
+
+void CustomGraphicsPathItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        lastMousePos = pos();
+        setCursor(Qt::ClosedHandCursor);
+    }
+    QGraphicsPathItem::mousePressEvent(event);
+}
+
+void CustomGraphicsPathItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        if (lastMousePos != pos() && m_undoStack) {
+            m_undoStack->push(new MoveCommand(this, lastMousePos, pos()));
+        }
+        setCursor(Qt::ArrowCursor);
+    }
+    QGraphicsPathItem::mouseReleaseEvent(event);
+}
+
+
 
 QVector<QLineF> CustomGraphicsPathItem::pathToLines(const QPainterPath &path) {
 //    QVector<QLineF> lines;

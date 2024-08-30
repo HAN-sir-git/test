@@ -40,6 +40,7 @@ public:
     bool getClosed() const { return data.closed; }
     double getWidth() const {return data.width;}
     QList<std::shared_ptr<Entity>> getChilds() const { return childs; }
+    QRectF getBox() const ;
 
 public:
     // dxf中多段线不全是直线，会有弧线，需要弧度计算，弧线结构体未定义，先实现直线的

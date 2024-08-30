@@ -20,3 +20,7 @@ void CustomGraphicsInterface::clearChildLine()
 {
     child_line.clear();
 }
+
+void CustomGraphicsInterface::setUndoStack(QUndoStack *undoStack) {
+    m_undoStack = undoStack;
+}

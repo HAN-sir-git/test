@@ -11,8 +11,15 @@ public:
     CustomGraphicsPathItem(QGraphicsItem *parent = nullptr);
     CustomGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent = nullptr);
 
-    QVector<QLineF> pathToLines(const QPainterPath& path);
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    QVector<QLineF> pathToLines(const QPainterPath& path);
+private:
+
+    QPointF lastMousePos;
 };
 
 #endif // CUSTOMGRAPHICSPATHITEM_H

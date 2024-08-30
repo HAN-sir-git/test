@@ -20,8 +20,15 @@ public:
     CGeometryAnalysis(QGraphicsScene *scene);
     ~CGeometryAnalysis();
 
+
+    /***************************************************边界过滤******************************************************************************/
+
+    bool isLineCollinearWithRectangleEdge(const QLineF& line, const QRectF& rect);
+
+
+    /****************************************************相交聚类*************************************************************************/
     // 对场景图元根据矩形面积进行排序 从大到小 并建立Map
-    void sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map,QList<QGraphicsItem *> &filteritemlist);
+    void sortItemsByBoundingRectAreaDescending(QList<QGraphicsItem *> &items, QMap<int, QGraphicsItemListPtr> &map,QList<QGraphicsItem *> &filteritemlist,QRectF box);
 
     // 将真正相交的图元进行聚类，返回聚类结果
     // items 为待聚类的图元,已经按照面积从大到小排序
@@ -41,7 +48,7 @@ public:
 
     QMap<QGraphicsItem*, QList<QLineF>> convertToLineMap(const QMap<QGraphicsItem*, QGraphicsItemListPtr>& inputMap);
 
-    /************************************************分开实现******************************************************/
+    /************************************************邻域关系构建******************************************************/
 
     // 对线段集合打断返回新的集合并构建点的邻域关系
     QList<QLineF> breakLinesByIntersections(const QList<QLineF> &lines, QMap<QPointF, QSet<QPointF> > &neighborhood);
@@ -61,7 +68,7 @@ public:
     // 通过子函数构建的打断线集合和点的邻域关系
     QList<QLineF> breakLinesByIntersectionFromFuncs(const QList<QLineF>& lines, QMap<QPointF, QSet<QPointF>>& neighborhood);
 
-    /*************************************************************************************************************/
+    /****************************************************轮廓查找*********************************************************/
 
     // 查找轮廓中的左下角点
     QPointF findBottomLeftPoint(const QList<QPointF>& points);

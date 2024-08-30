@@ -9,3 +9,12 @@
 //    }
 //    // 多段线是否要打断作为普通线来处理
 //}
+
+void ConvertData::refreshBox()
+{
+    box = QRectF();
+    for (auto polyline : polyline_list)
+    {
+        box = box.united(polyline->getBox());
+    }
+}

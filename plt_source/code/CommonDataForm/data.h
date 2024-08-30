@@ -26,6 +26,10 @@ struct ConvertData
     PointPtrList point_list;
     LinePtrList line_list;
     PolyLinePtrList polyline_list;
+public:
+    QRectF box; // data box
+
+    void refreshBox();
 };
 
 #endif // DATA_H

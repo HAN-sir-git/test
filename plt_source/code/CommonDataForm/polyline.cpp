@@ -24,6 +24,27 @@ const QVector<QPoint> PolyLine::getQPoints()
     return points;
 }
 
+QRectF PolyLine::getBox() const
+{
+    QRectF rect;
+    for(auto p: data.points)
+    {
+        if (p.x() < rect.left()) {
+            rect.setLeft(p.x());
+        }
+        if (p.x() > rect.right()) {
+            rect.setRight(p.x());
+        }
+        if (p.y() < rect.top()) {
+            rect.setTop(p.y());
+        }
+        if (p.y() > rect.bottom()) {
+            rect.setBottom(p.y());
+        }
+    }
+    return rect;
+}
+
 void PolyLine::appendVertexs(const QList<Point> &vl)
 {
     if(!vl.size()) return;

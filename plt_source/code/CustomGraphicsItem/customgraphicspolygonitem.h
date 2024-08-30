@@ -12,6 +12,20 @@ public:
     CustomGraphicsPolygonItem(const QPolygonF &polygon,
                               QGraphicsItem *parent = nullptr);
 
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
+
+private:
+
+    QPointF lastMousePos;
 };
+
+
+
+
 
 #endif // CUSTOMGRAPHICSPOLYGONITEM_H

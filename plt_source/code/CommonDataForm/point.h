@@ -39,7 +39,9 @@ public:
     QPointF getPointF() const { return data.point; }
     double getX() const { return data.point.x(); }
     double getY() const { return data.point.y(); }
-    QRectF getBox() const { return QRectF(data.point,data.point); }
+    double x() const { return data.point.x(); }
+    double y() const { return data.point.y(); }
+    QRectF getBox() const { return QRectF(data.point,QSize(0,0)); }
     double getStaWidth() const { return data.stawidth; }
     double getEndWidth() const { return data.endwidth; }
     double getBulge() const { return data.bulge; }

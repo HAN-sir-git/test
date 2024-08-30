@@ -11,6 +11,17 @@ public:
     CustomGraphicsLineItem(QGraphicsItem *parent = nullptr);
     CustomGraphicsLineItem(const QLineF &line, QGraphicsItem *parent = nullptr);
 
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+private:
+
+    QPointF lastMousePos;
+
+
 };
 
 #endif // CUSTOMGRAPHICSLINEITEM_H

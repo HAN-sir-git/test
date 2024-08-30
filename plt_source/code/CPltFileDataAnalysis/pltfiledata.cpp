@@ -37,6 +37,7 @@ bool PltFileData::ParsePltFile()
         // 循环直到文件结束或readDxfGroups返回false
     }
     file.close();
+    m_convertData->refreshBox();
     return true;
 
 }
@@ -65,7 +66,6 @@ bool PltFileData::getStrippedPltQt(QString &line, QTextStream &stream) {
 
 bool PltFileData::readPltGroups(QTextStream& stream)
 {
-    ConvertData cc;
     QString pltReadTmp;
     QString splitChar;
     double xOffset = 0; //x轴的偏移，用于翻页
@@ -158,6 +158,11 @@ bool PltFileData::readPltGroups(QTextStream& stream)
     }
 
     return !stream.atEnd();
+}
+
+QRectF PltFileData::getBox()
+{
+    return m_convertData->box;
 }
         
 
