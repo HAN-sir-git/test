@@ -56,6 +56,8 @@
 #include "CPltFileDataAnalysis/pltfiledata.h"
 #include "CustomGraphicsItem/customgraphicsheader.h"
 #include "geometryAnalysis/cgeometryanalysis.h"
+#include "view.h"
+#include "CDxfFileDataAnalysis/cdxfwriter.h"
 
 QT_BEGIN_NAMESPACE
 class CGraphicsScene;
@@ -67,14 +69,19 @@ class MainWindow : public QWidget
 public:
     MainWindow(QWidget *parent = 0);
 
-private:
-    void setupMatrix();
+    void initConnect();
+
+public slots:
+    // 工具栏函数部分
+    void openPltFile();
     void populateScene();
 
 
+    void dxfFileWrite(QList<QGraphicsItem *> items);
+
+
 public:
-    // 工具栏函数部分
-    void openPltFile();
+
     // 遍历data 转换其中图元数据结构为QGraphicsItem
     void populateSceneWithData(std::shared_ptr<ConvertData> data);
 
@@ -102,7 +109,9 @@ public:
    // void opencvtest1(const QString& path);
     CGeometryAnalysis* geometryParser;
     CGraphicsScene *scene;
+    View *view;
     PltFileData *parser;
+    CDxfWriter *dxfWriter;
 };
 
 #endif // MAINWINDOW_H

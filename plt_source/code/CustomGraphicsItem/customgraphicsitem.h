@@ -4,7 +4,7 @@
 #include <QGraphicsItem>
 #include <QLineF>
 #include <QUndoStack>
-#include "movecommand.h"
+#include "Command/movecommand.h"
 class CustomGraphicsInterface  {
 public:
     CustomGraphicsInterface() {}

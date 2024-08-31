@@ -61,3 +61,27 @@ double COMMON_Math::getAngle(const QPointF p)
 {
     return COMMON_Math::correctAngle(std::atan2(p.y(),p.x()));
 }
+
+
+bool COMMON_Math::arePointsEqual(const QPointF &p1, const QPointF &p2, double epsilon) {
+    return qAbs(p1.x() - p2.x()) < epsilon && qAbs(p1.y() - p2.y()) < epsilon;
+}
+
+
+bool COMMON_Math::areLinesEndpointConnected(const QLineF &line1, const QLineF &line2, QPointF &intersectionPoint)
+{
+    if (arePointsEqual(line1.p1(), line2.p1())) {
+        intersectionPoint =  line1.p1();
+        return true;
+    } else if (arePointsEqual(line1.p1(), line2.p2())) {
+        intersectionPoint =  line1.p1();
+        return true;
+    } else if (arePointsEqual(line1.p2(), line2.p1())) {
+        intersectionPoint =  line1.p2();
+        return true;
+    } else if (arePointsEqual(line1.p2(), line2.p2())) {
+        intersectionPoint = line1.p2();
+        return true;
+    }
+    return false;
+}

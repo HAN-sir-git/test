@@ -5,6 +5,7 @@
 #include "CustomGraphicsItem/customgraphicsitem.h"
 #include <cmath>
 #include <algorithm>
+#include "CommonDataForm/common_mathfunc.h"
 
 
 bool operator<(const QPointF& p1, const QPointF& p2) {
@@ -63,17 +64,17 @@ void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsIte
     for (QGraphicsItem *item : items)
     {
 
-        auto *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
-        if(lineItem )
-        {
-            auto l = lineItem->line();
-            auto b = isLineCollinearWithRectangleEdge(l,box);
-            if(b || l.length() > box.width()*0.8)
-            {
-                filteritemlist.append(item);
-                continue;
-            }
-        }
+        // auto *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
+        // if(lineItem )
+        // {
+        //     auto l = lineItem->line();
+        //     auto b = isLineCollinearWithRectangleEdge(l,box);
+        //     if(b || l.length() > box.width()*0.8)
+        //     {
+        //         filteritemlist.append(item);
+        //         continue;
+        //     }
+        // }
 
         auto area = qCeil(item->boundingRect().width() * item->boundingRect().height());
         if(area >= maxArea * 0.9)
@@ -86,9 +87,9 @@ void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsIte
     QList<int> keys = map.keys();
     qSort(keys.begin(), keys.end(), qGreater<int>());
     items.clear();
-    for (auto  key: keys)
+    for (int i = 0 ;i <  keys.size(); i++)
     {
-        items.append(map[key]);
+        items.append(map[keys[i]]);
     }
 }
 
@@ -252,6 +253,10 @@ QPointF CGeometryAnalysis::findIntersection(const QLineF &line1, const QLineF &l
     QPointF intersectionPoint;
     QLineF::IntersectionType type = line1.intersect(line2, &intersectionPoint);
     intersect = (type == QLineF::BoundedIntersection);
+    if(!intersect)
+    {
+        intersect = COMMON_Math::areLinesEndpointConnected(line1,line2,intersectionPoint);
+    }
     return intersectionPoint;
 }
 
@@ -260,6 +265,7 @@ void CGeometryAnalysis::findAllIntersections(const QList<QLineF> &lines, QVector
         for (int j = i + 1; j < lines.size(); ++j) {
             bool intersect = false;
             QPointF intersection = findIntersection(lines[i], lines[j], intersect);
+
             if (intersect) {
                 intersections[i].append(intersection);
                 intersections[j].append(intersection);

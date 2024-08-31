@@ -3,6 +3,7 @@
 
 #include <QGraphicsScene>
 #include <QUndoStack>
+#include "Command/deletecommand.h"
 
 class CGraphicsScene : public QGraphicsScene
 {
@@ -11,6 +12,9 @@ public:
     CGraphicsScene(QObject *parent = 0);
 
     QUndoStack* getUndoStack() { return undoStack; }
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
     
 private:
     QUndoStack *undoStack;

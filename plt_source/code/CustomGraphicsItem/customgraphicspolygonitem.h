@@ -17,7 +17,6 @@ protected:
 
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
-    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
 
 private:
 

@@ -2,6 +2,7 @@
 #define COM_MATHFUNC_H
 
 #include <QPointF>
+#include <QLineF>
 
 namespace COMMON_Math {
 
@@ -28,6 +29,12 @@ bool isAngleReadable(double angle);
 *从底部或右侧可读。
 */
 double makeAngleReadable(double angle, bool readable = true, bool *corrected = nullptr);
+
+// 判断两个点是否相等的辅助函数，考虑浮点误差
+bool arePointsEqual(const QPointF& p1, const QPointF& p2, double epsilon = 1e-6);
+
+// 检查两条线段是否在端点相接
+bool areLinesEndpointConnected(const QLineF& line1, const QLineF& line2,QPointF& intersectionPoint);
 
 }
 
