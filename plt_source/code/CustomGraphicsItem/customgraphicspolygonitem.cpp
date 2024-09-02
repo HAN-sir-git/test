@@ -37,16 +37,3 @@ void CustomGraphicsPolygonItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *even
     QGraphicsPolygonItem::mouseReleaseEvent(event);
 }
 
-void CustomGraphicsPolygonItem::wheelEvent(QGraphicsSceneWheelEvent *event) {
-    if (event->modifiers() & Qt::ControlModifier) {
-        qreal scaleFactor = 1.15;
-        if (event->delta() < 0) {
-            scaleFactor = 1.0 / scaleFactor;
-        }
-        setScale(scale() * scaleFactor);
-    } else {
-        int angle = event->delta() / 8;
-        setRotation(rotation() + angle);
-    }
-    event->accept();
-}

@@ -50,7 +50,6 @@
 
 #include "chip.h"
 #include "mainwindow.h"
-#include "view.h"
 #include "cgraphicssence.h"
 
 #include <QHBoxLayout>
@@ -62,6 +61,7 @@
 #include <QRGB>
 #include <QAction>
 #include <QGraphicsItem>
+#include <QToolButton>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -70,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     parser  = new PltFileData();
     scene = new CGraphicsScene(this);
+    dxfWriter = new CDxfWriter;
 
     QAction *undoAction = scene->getUndoStack()->createUndoAction(this, tr("&Undo"));
     undoAction->setShortcut(QKeySequence::Undo);  // Ctrl+Z
@@ -79,7 +80,7 @@ MainWindow::MainWindow(QWidget *parent)
     redoAction->setShortcut(QKeySequence::Redo);  // Ctrl+Y
     addAction(redoAction);
 
-    View *view = new View("view");
+    view = new View("view");
     view->view()->setScene(scene);
 
     geometryParser = new CGeometryAnalysis(scene);
@@ -89,24 +90,29 @@ MainWindow::MainWindow(QWidget *parent)
     setLayout(layout);
 
     setWindowTitle(tr("Plt Example"));
+    initConnect();
+//    dxfWriter->writeDxfFile("XXX",scene->items());
 
-    populateScene();
 
-//    view->view()->setSceneRect(scene->sceneRect());
-//    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+    view->view()->setSceneRect(scene->sceneRect());
+    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 
-   // saveSceneExample(scene,this);
+}
 
-    //exportSceneExample(scene,this);
-
-    //opencvtest1("D:/Plt_code/test/plt_source/image/ww.png_1_0.png");
-
+void MainWindow::initConnect()
+{
+    connect(view->openFileButton, &QToolButton::clicked, this, &MainWindow::openPltFile);
+    //connect(view->exportImageButton, &QToolButton::clicked, this, &MainWindow::saveSceneExample);
+    connect(view->outlineRecognitionButton, &QToolButton::clicked, this, &MainWindow::populateScene);
 }
 
 void MainWindow::populateScene()
 {
-    openPltFile();
+
     auto items = scene->items();
+
+    if(items.empty()) return;
+
     QList<QGraphicsItem *> filter;
     geometryParser->sortItemsByBoundingRectAreaDescending(items,geometryParser->m_Area2ItemMap,filter,parser->getBox());
     for(auto x :filter)
@@ -119,41 +125,83 @@ void MainWindow::populateScene()
 
     QMap<QGraphicsItem*, QList<QLineF>> item2Lines = geometryParser->convertToLineMap(ret);
 
-    // 显示聚类后的分类边框
-    for(int i = 0 ;i < ret.keys().size();i++)
+
+    // 显示聚类时候的相交路径判断
+
+//    for(auto pl: geometryParser->paths)
+//    {
+//        QPen rrr(  Qt::red);
+//        auto item = new CustomGraphicsPathItem(pl);
+//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+//        p->setUndoStack(scene->getUndoStack());
+//        item->setPen(rrr);
+//        scene->addItem(item);
+//    }
+
+    for (auto pol: geometryParser->polygons)
     {
-        QPen rrr( i%2 == 0 ? Qt::red : Qt::green);
-        auto key = ret.keys().at(i);
-        QRectF r;
-        for(auto item: ret[key])
+
+        pol.pop_front();
+        pol.pop_back();
+        QPainterPath path;
+        if(!pol.empty()) path.moveTo(pol.takeFirst());
+        for(auto p: pol)
         {
-            //转换item的类型，根据类型绘制不同的图元
-            int itemType = item->type();
-
-
-            if (itemType == QGraphicsPolygonItem::Type) {
-                QGraphicsPolygonItem *polygonItem = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
-                polygonItem->setPen(rrr);
-                r = r.united(polygonItem->sceneBoundingRect());
-            } else if (itemType == QGraphicsLineItem::Type) {
-                QGraphicsLineItem *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
-                lineItem->setPen(rrr);
-                r = r.united(lineItem->sceneBoundingRect());
-            } else if (itemType == QGraphicsPathItem::Type) {
-                QGraphicsPathItem *pathItem = qgraphicsitem_cast<QGraphicsPathItem *>(item);
-                pathItem->setPen(rrr);
-                r = r.united(pathItem->sceneBoundingRect());
-            } else {
-
-            }
+            path.lineTo(p);
         }
-        // 绘制边框
-        auto rectitem = new QGraphicsRectItem(r);
-        rectitem->setPen(rrr);
-        scene->addItem(rectitem);
+
+        QPen rrr(  Qt::red);
+        auto item = new CustomGraphicsPathItem(path);
+        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+        p->setUndoStack(scene->getUndoStack());
+        item->setPen(rrr);
+        scene->addItem(item);
     }
 
-    // 绘制聚类后一组集合的轮廓
+
+     //显示聚类后的分类边框
+//    for(int i = 0 ;i < ret.keys().size();i++)
+//    {
+//        QPen rrr( i%2 == 0 ? Qt::red : Qt::green);
+//        auto key = ret.keys().at(i);
+//        QRectF r;
+//        for(auto item: ret[key])
+//        {
+//            //转换item的类型，根据类型绘制不同的图元
+//            int itemType = item->type();
+
+
+//            if (itemType == QGraphicsPolygonItem::Type) {
+//                QGraphicsPolygonItem *polygonItem = qgraphicsitem_cast<QGraphicsPolygonItem *>(item);
+//               // polygonItem->setPen(rrr);
+//                r = r.united(polygonItem->sceneBoundingRect());
+//            } else if (itemType == QGraphicsLineItem::Type) {
+//                QGraphicsLineItem *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
+//               // lineItem->setPen(rrr);
+//                r = r.united(lineItem->sceneBoundingRect());
+//            } else if (itemType == QGraphicsPathItem::Type) {
+//                QGraphicsPathItem *pathItem = qgraphicsitem_cast<QGraphicsPathItem *>(item);
+//                //pathItem->setPen(rrr);
+//                r = r.united(pathItem->sceneBoundingRect());
+//            } else {
+
+//            }
+//        }
+//        // 绘制边框
+//        QPolygonF polygon;
+//          polygon << r.topLeft()    // 左上角
+//                  << r.topRight()   // 右上角
+//                  << r.bottomRight()// 右下角
+//                  << r.bottomLeft();// 左下角
+//        auto item = new CustomGraphicsPolygonItem(polygon);
+//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+//        p->setUndoStack(scene->getUndoStack());
+//        item->setPen(rrr);
+//        scene->addItem(item);
+//    }
+
+     //绘制聚类后一组集合的轮廓
+
 //    for(auto itemkey: item2Lines.keys())
 //    {
 //        QMap<QPointF, QSet<QPointF> > neighborhood;
@@ -162,34 +210,46 @@ void MainWindow::populateScene()
 //        auto contourPoints = geometryParser->findContour(startp,neighborhood);
 
 //        if(contourPoints.empty()) continue;
+
 //        QPainterPath path(contourPoints[0]/10);
+//        QList<QLineF> ls;
 //        for(int i = 1; i <  contourPoints.size();i++)
 //        {
 //            path.lineTo(contourPoints[i]/10);
+//            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
 //        }
 //        auto item = new CustomGraphicsPathItem(path);
+//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+//        p->setUndoStack(scene->getUndoStack());
+//        p->setChildLine(ls);
 //        QPen rrr( Qt::red);
 //        item->setPen(rrr);
 //        scene->addItem(item);
 //    }
+    QList<QGraphicsItem*> outitems = scene->items();
+    dxfFileWrite(outitems);
 
+}
 
+void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
+{
+    // 获取文件保存路径
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                                    "untitled.dxf",
+                                                    tr("DXF Files (*.dxf)"));
+    if(fileName.isEmpty())
+    {
+        return;
+    }
 
-    //        for(int i = 0; i <  breaklines.size();i++)
-    //        {
-    //            auto item = new CustomGraphicsLineItem(QLineF(breaklines[i].p1()/10,breaklines[i].p2()/10));
-    //            QPen rrr( Qt::red);
-    //            item->setPen(rrr);
-    //            scene->addItem(item);
-    //        }
+    // 保存文件
+    dxfWriter->writeDxfFile(fileName, items);
 
-
-
-    //        break;
 }
 
 void  MainWindow::openPltFile()
 {
+    scene->clear();
     if(parser->ParsePltFile())
     {
        auto data = parser->getPltData();
@@ -202,6 +262,7 @@ void MainWindow::populateSceneWithData(std::shared_ptr<ConvertData> data)
 {
    ConvertPolyLine2Item(data->polyline_list);
     //ConvertPolyLine2path(data->polyline_list);
+
 }
 
 void MainWindow::ConvertPolyLine2Item(const PolyLinePtrList &polyLineList)
@@ -244,9 +305,6 @@ void MainWindow::ConvertPolyLine2Item(const PolyLinePtrList &polyLineList)
                 case COMMON_TYPE::LINE:
                 {
                     auto line = std::dynamic_pointer_cast<Line>(child);
-                    //A方案 追加作为孩子项，但是不绘制，会影响图元的获取问题
-                    //CustomGraphicsLineItem *item1 = new CustomGraphicsLineItem(line->getLineF());
-                    //item1->setParentItem(item);
 
                     // B方案 直接追加QLineF类型到item,指针类型强转公共接口基类
                     CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
@@ -258,14 +316,6 @@ void MainWindow::ConvertPolyLine2Item(const PolyLinePtrList &polyLineList)
         CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
         p->setUndoStack(scene->getUndoStack());
         scene->addItem(item);
-        // QPen www(Qt::white);
-        // //item->setPen(www);
-        // if(!pl->getClosed())
-        // {
-        //     QPen rrr(Qt::red);
-        //     QPen ggg(Qt::green);
-        //     item->setPen(0 == 0 ? rrr:ggg);
-        // }
     }
 
 }

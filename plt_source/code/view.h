@@ -100,7 +100,14 @@ private slots:
     void rotateLeft();
     void rotateRight();
 
-private:
+
+public:
+
+    QToolButton *openFileButton;
+    QToolButton *exportImageButton;
+    QToolButton *outlineRecognitionButton;
+
+public:
     GraphicsView *graphicsView;
     QLabel *label;
     QLabel *label2;
@@ -111,8 +118,6 @@ private:
     QToolButton *printButton;
     QToolButton *resetButton;
 
-    QToolButton *openFileButton;
-    QToolButton *exportImageButton;
     QSlider *zoomSlider;
     QSlider *rotateSlider;
 };

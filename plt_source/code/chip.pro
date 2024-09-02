@@ -13,11 +13,17 @@ QMAKE_CXXFLAGS += -Wno-unused-variable
 #    QMAKE_POST_LINK += $$quote(set PATH=$$OPENCV_PATH;%PATH%)
 #}
 
+include(common.pri)
+INCLUDEPATH +=  $$PWD/install/include/
 
-INCLUDEPATH +=  $$PWD\install\include\
+INCLUDEPATH +=  $$PWD/libdxfrw/src/
 
 
-LIBS += -L $$PWD\lib\libopencv_*.a
+LIBS += -L $$PWD/lib/libopencv_*.a
+
+LIBS += -L $$PWD/dxflib/libdxfrw.a
+
+
 
 
 
@@ -41,8 +47,12 @@ HEADERS += mainwindow.h view.h chip.h \
     CustomGraphicsItem/customgraphicsheader.h \
     CustomGraphicsItem/customgraphicsitem.h \
     OpencvAnalysis/cscenetoimage.h \
+    Command/movecommand.h \
     cgraphicssence.h \
-    movecommand.h
+    Command/deletecommand.h \
+    CDxfFileDataAnalysis/cdxfwriter.h \
+    CommonDataForm/filterdxfrw.h \
+    CommonDataForm/block.h
 
 
 
@@ -60,8 +70,13 @@ SOURCES += main.cpp \
     CustomGraphicsItem/customgraphicspolygonitem.cpp \
     CustomGraphicsItem/customgraphicsitem.cpp \
     OpencvAnalysis/cscenetoimage.cpp \
+    Command/movecommand.cpp \
     cgraphicssence.cpp \
-    movecommand.cpp
+    Command/deletecommand.cpp \
+    CDxfFileDataAnalysis/cdxfwriter.cpp \
+    CommonDataForm/filterdxfrw.cpp \
+    CommonDataForm/block.cpp
+
 
 
 SOURCES += mainwindow.cpp view.cpp chip.cpp
@@ -78,3 +93,6 @@ build_all:!build_pass {
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/widgets/graphicsview/chip
 INSTALLS += target
+
+DISTFILES += \
+    image/lunkuo.png

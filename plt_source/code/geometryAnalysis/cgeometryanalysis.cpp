@@ -5,6 +5,7 @@
 #include "CustomGraphicsItem/customgraphicsitem.h"
 #include <cmath>
 #include <algorithm>
+#include "CommonDataForm/common_mathfunc.h"
 
 
 bool operator<(const QPointF& p1, const QPointF& p2) {
@@ -63,17 +64,17 @@ void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsIte
     for (QGraphicsItem *item : items)
     {
 
-        auto *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
-        if(lineItem )
-        {
-            auto l = lineItem->line();
-            auto b = isLineCollinearWithRectangleEdge(l,box);
-            if(b || l.length() > box.width()*0.8)
-            {
-                filteritemlist.append(item);
-                continue;
-            }
-        }
+        // auto *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
+        // if(lineItem )
+        // {
+        //     auto l = lineItem->line();
+        //     auto b = isLineCollinearWithRectangleEdge(l,box);
+        //     if(b || l.length() > box.width()*0.8)
+        //     {
+        //         filteritemlist.append(item);
+        //         continue;
+        //     }
+        // }
 
         auto area = qCeil(item->boundingRect().width() * item->boundingRect().height());
         if(area >= maxArea * 0.9)
@@ -86,9 +87,9 @@ void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsIte
     QList<int> keys = map.keys();
     qSort(keys.begin(), keys.end(), qGreater<int>());
     items.clear();
-    for (auto  key: keys)
+    for (int i = 0 ;i <  keys.size(); i++)
     {
-        items.append(map[key]);
+        items.append(map[keys[i]]);
     }
 }
 
@@ -120,6 +121,13 @@ QMap<QGraphicsItem *, QGraphicsItemListPtr> CGeometryAnalysis::intersectItemsLoo
 {
         // 用于过滤掉已经聚类的图元
     QSet<QGraphicsItem *> clusteredItems = filteritemlist.toSet();
+
+
+    /*********************************************************************/
+
+    paths.clear();
+    polygons.clear();
+    /*********************************************************************/
 
     // 结果集合
     QMap<QGraphicsItem*,QGraphicsItemListPtr> clusters;
@@ -186,12 +194,18 @@ QGraphicsItemListPtr CGeometryAnalysis::loopCluster(QGraphicsItem * item, QGraph
     QGraphicsItemListPtr loopItems = {item};
     // 被完全覆盖的图元，不可能是轮廓图元
     QGraphicsItemListPtr coveredItems = {};
+    // 缩放因子
+     const qreal scaleFactor = 1.0;
     // 获取与当前矩形相交的图元
     while(!loopItems.isEmpty())
     {
         QGraphicsItem *item = loopItems.takeFirst();
         QList<QGraphicsItem*> intersectingItems = scene->items(item->boundingRect(), Qt::IntersectsItemShape);
         QPainterPath itemShape = item->shape();
+
+        QTransform transform;
+        transform.scale(scaleFactor, scaleFactor);
+        itemShape = transform.map(itemShape);
         // 聚类的
         for (QGraphicsItem *intersectingItem : intersectingItems)
         {
@@ -201,16 +215,27 @@ QGraphicsItemListPtr CGeometryAnalysis::loopCluster(QGraphicsItem * item, QGraph
                 continue;
             }
             // 判断itemShape是否遮挡了intersectingItem
+            // 获取放大后的intersectingItem的shape
+                      QPainterPath intersectingItemShape = intersectingItem->shape();
+                      intersectingItemShape = transform.map(intersectingItemShape);
 
-            if(itemShape.contains(intersectingItem->shape()))
+            if(itemShape.contains(intersectingItemShape))
             {
                 // 如果遮挡了，则将intersectingItem加入到item的覆盖图元中
                 coveredItems.append(intersectingItem);
                 clusteredItems.insert(intersectingItem);
                 continue;
             }
-            else if(itemShape.intersects(intersectingItem->shape()))
+            else if(itemShape.intersects(intersectingItemShape))
             {
+                auto intersectedPath = itemShape.intersected(intersectingItemShape);
+               //auto subpaths = extractSubPaths(intersectedPath);
+                //paths.append(subpaths);
+
+                auto pol = intersectedPath.toSubpathPolygons();
+                polygons.append(pol);
+
+
                 // 如果intersectingItem遮挡了item，则将item加入到intersectingItem的聚类中
                 loopItems.append(intersectingItem);
                 cluster.append(intersectingItem);
@@ -246,12 +271,62 @@ QMap<QGraphicsItem *, QList<QLineF> > CGeometryAnalysis::convertToLineMap(const 
     return lineMap;
 }
 
+QList<QPainterPath> CGeometryAnalysis::extractSubPaths(const QPainterPath &intersectedPath)
+{
+    // 遍历 QPainterPath 的所有元素，提取子路径
+    QList<QPainterPath> subpaths;
+    QPainterPath currentSubpath;
+    int elementCount = intersectedPath.elementCount();
+
+    for (int i = 0; i < elementCount; ++i) {
+        QPainterPath::Element element = intersectedPath.elementAt(i);
+
+        switch (element.type) {
+            case QPainterPath::MoveToElement:
+                if (!currentSubpath.isEmpty()) {
+                    subpaths.append(currentSubpath);
+                    currentSubpath = QPainterPath();
+                }
+                currentSubpath.moveTo(element.x, element.y);
+                break;
+
+            case QPainterPath::LineToElement:
+                currentSubpath.lineTo(element.x, element.y);
+                break;
+
+            case QPainterPath::CurveToElement:
+                // CurveToElement is followed by CurveToDataElement(s)
+                if (i + 2 < elementCount) {
+                    const QPainterPath::Element& control1 = intersectedPath.elementAt(i);
+                    const QPainterPath::Element& control2 = intersectedPath.elementAt(i + 1);
+                    const QPainterPath::Element& endPoint = intersectedPath.elementAt(i + 2);
+                    currentSubpath.cubicTo(control1.x, control1.y, control2.x, control2.y, endPoint.x, endPoint.y);
+                    i += 2; // Skip the two control points and move to the next segment
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    if (!currentSubpath.isEmpty()) {
+        subpaths.append(currentSubpath);
+    }
+
+    return subpaths;
+}
+
 
 QPointF CGeometryAnalysis::findIntersection(const QLineF &line1, const QLineF &line2, bool &intersect)
 {
     QPointF intersectionPoint;
     QLineF::IntersectionType type = line1.intersect(line2, &intersectionPoint);
     intersect = (type == QLineF::BoundedIntersection);
+    if(!intersect)
+    {
+        intersect = COMMON_Math::areLinesEndpointConnected(line1,line2,intersectionPoint);
+    }
     return intersectionPoint;
 }
 
@@ -260,6 +335,7 @@ void CGeometryAnalysis::findAllIntersections(const QList<QLineF> &lines, QVector
         for (int j = i + 1; j < lines.size(); ++j) {
             bool intersect = false;
             QPointF intersection = findIntersection(lines[i], lines[j], intersect);
+
             if (intersect) {
                 intersections[i].append(intersection);
                 intersections[j].append(intersection);

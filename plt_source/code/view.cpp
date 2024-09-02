@@ -182,6 +182,11 @@ View::View(const QString &name, QWidget *parent)
     exportImageButton->setText(tr("Export Image"));
     exportImageButton->setIcon(QIcon(QPixmap(":/image/saveImage.png")));
 
+    // 添加轮廓识别按钮
+    outlineRecognitionButton = new QToolButton;
+    outlineRecognitionButton->setText(tr("Outline Recognition"));
+    outlineRecognitionButton->setIcon(QIcon(QPixmap(":/image/lunkuo.png")));
+
     // 互斥按钮组
     QButtonGroup *pointerModeGroup = new QButtonGroup(this);
     pointerModeGroup->setExclusive(true);
@@ -198,7 +203,8 @@ View::View(const QString &name, QWidget *parent)
     labelLayout->addWidget(openGlButton);
     labelLayout->addWidget(printButton);
     labelLayout->addWidget(openFileButton);
-    labelLayout->addWidget(exportImageButton);
+    //labelLayout->addWidget(exportImageButton);
+    labelLayout->addWidget(outlineRecognitionButton);
 
     QGridLayout *topLayout = new QGridLayout;
     topLayout->addLayout(labelLayout, 0, 0);
@@ -250,7 +256,7 @@ void View::setResetButtonEnabled()
 
 void View::setupMatrix()
 {
-    qreal scale = qPow(qreal(2), (zoomSlider->value() - 5000) / qreal(50));
+    qreal scale = qPow(qreal(2), (zoomSlider->value() - 250) / qreal(50));
 
     QMatrix matrix;
     matrix.scale(scale, scale);

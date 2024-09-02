@@ -46,7 +46,13 @@ public:
     // 对一个图元进行循环聚类
     QGraphicsItemListPtr  loopCluster(QGraphicsItem *item, QGraphicsScene *scene,QSet<QGraphicsItem *>& clusteredItems);
 
+    // 图元对应相交集合所有的线
     QMap<QGraphicsItem*, QList<QLineF>> convertToLineMap(const QMap<QGraphicsItem*, QGraphicsItemListPtr>& inputMap);
+
+    // 从QpainterPath中提取子路径
+    QList<QPainterPath> extractSubPaths(const QPainterPath& path);
+
+
 
     /************************************************邻域关系构建******************************************************/
 
@@ -86,6 +92,13 @@ public:
     QMap<int, QGraphicsItemListPtr> m_Area2ItemMap;
     QMap<QGraphicsItem*,QGraphicsItemListPtr> m_singleClusterMap;
     QMap<QGraphicsItem*,QGraphicsItemListPtr> m_loopClusterMap;
+
+
+public:
+    //测试元素
+
+    QList<QPainterPath> paths;
+    QList<QPolygonF> polygons;
 
 };
 
