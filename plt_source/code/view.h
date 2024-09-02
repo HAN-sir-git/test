@@ -107,7 +107,7 @@ public:
     QToolButton *exportImageButton;
     QToolButton *outlineRecognitionButton;
 
-private:
+public:
     GraphicsView *graphicsView;
     QLabel *label;
     QLabel *label2;
