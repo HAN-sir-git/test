@@ -44,7 +44,7 @@ public:
 
 public:
     // dxf中多段线不全是直线，会有弧线，需要弧度计算，弧线结构体未定义，先实现直线的
-    void appendVertexs(const QList<Point>& vl);
+    void appendVertexs(QList<Point>& vl);
     std::unique_ptr<Entity> createVertex(const Point& p,const Point& b,double bulge=0.0);
 
 public:

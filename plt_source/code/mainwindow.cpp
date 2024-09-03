@@ -62,6 +62,7 @@
 #include <QAction>
 #include <QGraphicsItem>
 #include <QToolButton>
+#include <QVector2D>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -105,6 +106,8 @@ void MainWindow::initConnect()
     //connect(view->exportImageButton, &QToolButton::clicked, this, &MainWindow::saveSceneExample);
     connect(view->outlineRecognitionButton, &QToolButton::clicked, this, &MainWindow::populateScene);
 }
+
+
 
 void MainWindow::populateScene()
 {
@@ -246,12 +249,105 @@ void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
 
 }
 
+
+void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
+{
+    PolyLinePtrList ret;
+    // plt文件中的一定是point 类型
+     QList<QList<Point>> pointList;
+    // 1. 遍历polylineList,找到相交的polyline,存储不闭合的polyline的首位端点
+    for (auto pl : polyLineList)
+    {
+        if(pl->getClosed())
+        {
+            ret.append(pl);
+            continue;
+        }
+        auto points = pl->getPoints();
+        if(points.size() < 2)
+        {
+            continue;
+        }
+        pointList.append(points);
+    }
+
+    // 2. 找到首尾相接的polyline，记录使用过的polyline
+    QList<int> usedIndex;
+    for(int i = 0; i < pointList.size();i++)
+    {
+        if(usedIndex.contains(i))
+        {
+            continue;
+        }
+        QList<Point> pl = pointList[i];
+        for(int j = 0; j < pointList.size();j++)
+        {
+            if(i == j || usedIndex.contains(j))
+            {
+                continue;
+            }
+            QList<Point> pl2 = pointList[j];
+
+            if(pl.first().data.point == pl2.last().data.point)
+            {
+                pl2.pop_back();
+                pl2.append(pl);
+                usedIndex.append(j);
+            }
+            else if(pl.first().data.point == pl2.first().data.point)
+            {
+                pl.pop_front();
+                reverse(pl.begin(),pl.end());
+                pl2.append(pl);
+                usedIndex.append(j);
+            }else if(pl.last().data.point == pl2.first().data.point)
+            {
+                pl.pop_back();
+                pl.append(pl2);
+                usedIndex.append(j);
+            }else if(pl.last().data.point == pl2.last().data.point)
+            {
+                pl.pop_back();
+                reverse(pl2.begin(),pl2.end());
+                pl.append(pl2);
+                usedIndex.append(j);
+            }
+        }
+        // 判断pl 是否闭合,如果闭合，直接添加到ret，如果两点的距离小于阈值2，认为闭合
+
+        if(QVector2D(pl.front().data.point-pl.back().data.point).length() < 2)
+        {
+            if(pl.front().data.point != pl.back().data.point)
+                pl.append(pl.front());
+            auto pline = std::make_shared<PolyLine>(pl,true);
+            auto pts = pl;
+            pline->appendVertexs(pts);
+            ret.append(pline);
+        }else
+        {
+            auto pline = std::make_shared<PolyLine>(pl,false);
+            pline->appendVertexs(pl);
+            ret.append(pline);
+        }
+    }
+    polyLineList = ret;
+}
+
+void MainWindow::convertPltData(std::shared_ptr<ConvertData>& data)
+{
+   // 合并端点相交polyline
+    mergeIntersectedPolyline(data->polyline_list);
+}
+
 void  MainWindow::openPltFile()
 {
     scene->clear();
     if(parser->ParsePltFile())
     {
        auto data = parser->getPltData();
+
+       // 增加对data的处理环节
+       convertPltData(data);
        populateSceneWithData(data);
     }
 

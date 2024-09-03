@@ -74,6 +74,14 @@ public:
 public slots:
     // 工具栏函数部分
     void openPltFile();
+    // 合并相交的polyline
+    void mergeIntersectedPolyline(PolyLinePtrList& polyLineList);
+
+    //pltData 转换到 需要的数据结构
+    void convertPltData(std::shared_ptr<ConvertData >& data);
+
+
+
     void populateScene();
 
 

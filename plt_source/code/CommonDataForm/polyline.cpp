@@ -10,7 +10,7 @@ const QVector<QPointF> PolyLine::getQPointFs()
 {
     QVector<QPointF> points;
     for (auto &p : data.points) {
-        points.append(p.getPointF() *0.1);
+        points.append(p.getPointF());
     }
     return points;
 }
@@ -45,7 +45,7 @@ QRectF PolyLine::getBox() const
     return rect;
 }
 
-void PolyLine::appendVertexs(const QList<Point> &vl)
+void PolyLine::appendVertexs(QList<Point> &vl)
 {
     if(!vl.size()) return;
         data.points = vl;
