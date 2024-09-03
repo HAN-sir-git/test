@@ -141,7 +141,6 @@ void MainWindow::populateScene()
     for (auto pol: geometryParser->polygons)
     {
 
-        pol.pop_front();
         pol.pop_back();
         QPainterPath path;
         if(!pol.empty()) path.moveTo(pol.takeFirst());
