@@ -333,6 +333,94 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
     polyLineList = ret;
 }
 
+void MainWindow::createEndPointKdTree(PolyLinePtrList polyLineList)
+{
+    QList<QList<Point>> pointList;
+   // 1. 遍历polylineList,找到相交的polyline,存储不闭合的polyline的首位端点
+   Kdtree::KdNodeVector nodes;
+   for (int i = 0;i < polyLineList.size();i++)
+   {
+       auto& pl = polyLineList[i];
+       if(pl->getClosed())continue;
+       if(pl->getPoints().size() < 2) continue;
+
+       auto points = pl->getPoints();
+       std::vector<double> point(2);
+       // start
+       point[0] = points.front().x();
+       point[1] = points.front().y();
+       Kdtree::KdNode node(point,nullptr,i);
+       nodes.push_back(node);
+       // end
+       point[0] = points.back().x();
+       point[1] = points.back().y();
+       Kdtree::KdNode node(point,nullptr,i);
+       nodes.push_back(node);
+   }
+   endpointKdtree = Kdtree::KdTree tree(&nodes);
+
+   // 2. 找到首尾相接的polyline，记录使用过的polyline
+   QList<int> usedIndex;
+   for(int i = 0; i < pointList.size();i++)
+   {
+       if(usedIndex.contains(i))
+       {
+           continue;
+       }
+       QList<Point> pl = pointList[i];
+       for(int j = 0; j < pointList.size();j++)
+       {
+           if(i == j || usedIndex.contains(j))
+           {
+               continue;
+           }
+           QList<Point> pl2 = pointList[j];
+
+           if(pl.first().data.point == pl2.last().data.point)
+           {
+               pl2.pop_back();
+               pl2.append(pl);
+               usedIndex.append(j);
+           }
+           else if(pl.first().data.point == pl2.first().data.point)
+           {
+               pl.pop_front();
+               reverse(pl.begin(),pl.end());
+               pl2.append(pl);
+               usedIndex.append(j);
+           }else if(pl.last().data.point == pl2.first().data.point)
+           {
+               pl.pop_back();
+               pl.append(pl2);
+               usedIndex.append(j);
+           }else if(pl.last().data.point == pl2.last().data.point)
+           {
+               pl.pop_back();
+               reverse(pl2.begin(),pl2.end());
+               pl.append(pl2);
+               usedIndex.append(j);
+           }
+       }
+       // 判断pl 是否闭合,如果闭合，直接添加到ret，如果两点的距离小于阈值2，认为闭合
+
+       if(QVector2D(pl.front().data.point-pl.back().data.point).length() < 2)
+       {
+           if(pl.front().data.point != pl.back().data.point)
+               pl.append(pl.front());
+           auto pline = std::make_shared<PolyLine>(pl,true);
+           auto pts = pl;
+           pline->appendVertexs(pts);
+           ret.append(pline);
+       }else
+       {
+           auto pline = std::make_shared<PolyLine>(pl,false);
+           pline->appendVertexs(pl);
+           ret.append(pline);
+       }
+   }
+   polyLineList = ret;
+}
+
 void MainWindow::convertPltData(std::shared_ptr<ConvertData>& data)
 {
    // 合并端点相交polyline

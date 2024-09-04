@@ -58,10 +58,12 @@
 #include "geometryAnalysis/cgeometryanalysis.h"
 #include "view.h"
 #include "CDxfFileDataAnalysis/cdxfwriter.h"
+#include "kdtree.hpp"
 
 QT_BEGIN_NAMESPACE
 class CGraphicsScene;
 QT_END_NAMESPACE
+
 
 class MainWindow : public QWidget
 {
@@ -77,10 +79,11 @@ public slots:
     // 合并相交的polyline
     void mergeIntersectedPolyline(PolyLinePtrList& polyLineList);
 
+    // Greate KDtree
+    void createEndPointKdTree(PolyLinePtrList polyLineList);
+
     //pltData 转换到 需要的数据结构
     void convertPltData(std::shared_ptr<ConvertData >& data);
-
-
 
     void populateScene();
 
@@ -120,6 +123,8 @@ public:
     View *view;
     PltFileData *parser;
     CDxfWriter *dxfWriter;
+    // kdtree struct
+    Kdtree::KdNodeVector endpointNodes;
 };
 
 #endif // MAINWINDOW_H

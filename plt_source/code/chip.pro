@@ -30,6 +30,7 @@ LIBS += -L $$PWD/dxflib/libdxfrw.a
 # For MSVC
 #win32:QMAKE_CXXFLAGS += /wd4101
 
+include(ToolFunc/ToolFunc.pri)
 
 HEADERS += mainwindow.h view.h chip.h \
     CommonDataForm/common_type.h \
