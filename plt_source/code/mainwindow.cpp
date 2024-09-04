@@ -337,7 +337,7 @@ void MainWindow::createEndPointKdTree(PolyLinePtrList polyLineList)
 {
     QList<QList<Point>> pointList;
    // 1. 遍历polylineList,找到相交的polyline,存储不闭合的polyline的首位端点
-   Kdtree::KdNodeVector nodes;
+    nodes;
    for (int i = 0;i < polyLineList.size();i++)
    {
        auto& pl = polyLineList[i];
@@ -357,7 +357,7 @@ void MainWindow::createEndPointKdTree(PolyLinePtrList polyLineList)
        Kdtree::KdNode node(point,nullptr,i);
        nodes.push_back(node);
    }
-   endpointKdtree = Kdtree::KdTree tree(&nodes);
+   endpointKdtree = Kdtree::KdTree(&nodes);
 
    // 2. 找到首尾相接的polyline，记录使用过的polyline
    QList<int> usedIndex;
