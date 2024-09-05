@@ -321,7 +321,7 @@ QList<QPainterPath> CGeometryAnalysis::extractSubPaths(const QPainterPath &inter
 QPointF CGeometryAnalysis::findIntersection(const QLineF &line1, const QLineF &line2, bool &intersect)
 {
     QPointF intersectionPoint;
-    QLineF::IntersectionType type = line1.intersect(line2, &intersectionPoint);
+    auto type = line1.intersect(line2, &intersectionPoint);
     intersect = (type == QLineF::BoundedIntersection);
     if(!intersect)
     {
