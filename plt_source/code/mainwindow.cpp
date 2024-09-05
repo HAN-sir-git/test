@@ -321,6 +321,9 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
                 }
             }
         }
+
+        if()
+
         auto pline = std::make_shared<PolyLine>(retPoints, true);
         pline->appendVertexs(retPoints);
         ret.append(pline);

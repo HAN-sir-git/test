@@ -2,6 +2,7 @@
 #include "tool.h"
 #include <QVector2D>
 #include <QVector3D>
+#include <math.h>
 LineTool::LineTool()
 {
 }
