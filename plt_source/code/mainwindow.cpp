@@ -264,8 +264,9 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
         {
             ret.append(polyLineList[i]);
         }else {
+
             endPointPolIndex.append(i);
-        }
+        }S
 
     }
 
@@ -292,39 +293,71 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
             Kdtree::KdNodeVector result;
             coord_point[0] = point1.x();
             coord_point[1] = point1.y();
-            endpointTree->k_nearest_neighbors(coord_point, 1, &result);
+            endpointTree->k_nearest_neighbors(coord_point, 2, &result);
 
-            if(!result.empty())
-            {
-                QPointF p =  QPointF(result[0].point[0], result[0].point[1]);
-                // 计算 p和point的长度
-                if(QVector2D(p-point1).length() < 2)
+                for(auto res: result)
                 {
-                    // 首尾相接
-                    if(index != result[0].index && !usedIndex.contains(result[0].index))
+                    QPointF p =  QPointF(res.point[0], res.point[1]);
+                    // 计算 p和point的长度
+                    if(QVector2D(p-point1).length() < 2)
                     {
-                        auto polylinePtr =  polyLineList[result[0].index];
-                        if(p == polylinePtr->getPoints().first().getPointF())
+                        // 首尾相接
+                        if(index != res.index && !usedIndex.contains(res.index))
                         {
-                            // 首
-                            retPoints.append(polylinePtr->getPoints());
-                            points.append(polylinePtr->getPoints().last());
-                        }else{
-                            // 尾
-                            auto tmppoint = polylinePtr->getPoints();
-                            std::reverse(tmppoint.begin(),tmppoint.end());
-                            retPoints.append(tmppoint);
-                            points.append(tmppoint.last());
+                            auto polylinePtr =  polyLineList[res.index];
+                            if(p == polylinePtr->getPoints().first().getPointF())
+                            {
+                                if(retPoints.first().getPointF() == point1)
+                                {
+                                    // 11
+                                    auto tmppoint = polylinePtr->getPoints();
+                                    points.append(tmppoint.last());
+                                    std::reverse(tmppoint.begin(),tmppoint.end());
+                                    tmppoint.append(retPoints);
+                                    retPoints = tmppoint;
+
+                                }else {
+                                    //12
+                                    retPoints.append(polylinePtr->getPoints());
+                                    points.append(polylinePtr->getPoints().last());
+                                }
+
+                            }else{
+                                // 尾
+                                if(retPoints.first().getPointF() == point1)
+                                {
+                                    // 11
+                                    auto tmppoint = polylinePtr->getPoints();
+                                    points.append(tmppoint.first());
+                                    tmppoint.append(retPoints);
+                                    retPoints = tmppoint;
+
+                                }else {
+                                    //12
+                                    auto tmppoint = polylinePtr->getPoints();
+                                    points.append(tmppoint.first());
+                                    std::reverse(tmppoint.begin(),tmppoint.end());
+                                    retPoints.append(tmppoint);
+
+                                }
+
+                            }
+                            usedIndex.append(res.index);
                         }
-                        usedIndex.append(result[0].index);
                     }
-                }
+
+
+
             }
         }
 
-        if()
+        bool bclose = false;
+        if(QVector2D(retPoints.last().getPointF() - retPoints.first().getPointF()).length() < 2)
+        {
+            bclose = true;
+        }
 
-        auto pline = std::make_shared<PolyLine>(retPoints, true);
+        auto pline = std::make_shared<PolyLine>(retPoints, bclose);
         pline->appendVertexs(retPoints);
         ret.append(pline);
     }
