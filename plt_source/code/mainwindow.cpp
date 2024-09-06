@@ -266,7 +266,7 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
         }else {
 
             endPointPolIndex.append(i);
-        }S
+        }
 
     }
 
