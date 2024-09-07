@@ -96,10 +96,6 @@ MainWindow::MainWindow(QWidget *parent)
     initConnect();
 //    dxfWriter->writeDxfFile("XXX",scene->items());
 
-
-    view->view()->setSceneRect(scene->sceneRect());
-    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
-
 }
 
 void MainWindow::initConnect()
@@ -107,6 +103,8 @@ void MainWindow::initConnect()
     connect(view->openFileButton, &QToolButton::clicked, this, &MainWindow::openPltFile);
     //connect(view->exportImageButton, &QToolButton::clicked, this, &MainWindow::saveSceneExample);
     connect(view->outlineRecognitionButton, &QToolButton::clicked, this, &MainWindow::populateScene);
+    connect(view->cutRecognitionButtonV, &QToolButton::clicked, this, &MainWindow::recognitionCutV);
+    connect(view->cutRecognitionButtonI, &QToolButton::clicked, this, &MainWindow::recognitionCutI);
 }
 
 
@@ -143,30 +141,30 @@ void MainWindow::populateScene()
 //        scene->addItem(item);
 //    }
 
-    for (auto pol: geometryParser->polygons)
-    {
+//    for (auto pol: geometryParser->polygons)
+//    {
 
-        pol.pop_back();
-        QPainterPath path;
-        if(!pol.empty()) path.moveTo(pol.takeFirst());
-        for(auto p: pol)
-        {
-            path.lineTo(p);
-        }
+//        pol.pop_back();
+//        QPainterPath path;
+//        if(!pol.empty()) path.moveTo(pol.takeFirst());
+//        for(auto p: pol)
+//        {
+//            path.lineTo(p);
+//        }
 
-        QPen rrr(  Qt::red);
-        auto item = new CustomGraphicsPathItem(path);
-        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-        p->setUndoStack(scene->getUndoStack());
-        item->setPen(rrr);
-        scene->addItem(item);
-    }
+//        QPen rrr(  Qt::red);
+//        auto item = new CustomGraphicsPathItem(path);
+//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+//        p->setUndoStack(scene->getUndoStack());
+//        item->setPen(rrr);
+//        scene->addItem(item);
+//    }
 
 
      //显示聚类后的分类边框
 //    for(int i = 0 ;i < ret.keys().size();i++)
 //    {
-//        QPen rrr( i%2 == 0 ? Qt::red : Qt::green);
+//        QPen rrr( Qt::red);
 //        auto key = ret.keys().at(i);
 //        QRectF r;
 //        for(auto item: ret[key])
@@ -192,7 +190,7 @@ void MainWindow::populateScene()
 //            }
 //        }
 //        // 绘制边框
-//        QPolygonF polygon;
+//         QPolygonF polygon;
 //          polygon << r.topLeft()    // 左上角
 //                  << r.topRight()   // 右上角
 //                  << r.bottomRight()// 右下角
@@ -206,32 +204,88 @@ void MainWindow::populateScene()
 
      //绘制聚类后一组集合的轮廓
 
-//    for(auto itemkey: item2Lines.keys())
-//    {
-//        QMap<QPointF, QSet<QPointF> > neighborhood;
-//        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
-//        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
-//        auto contourPoints = geometryParser->findContour(startp,neighborhood);
+    for(auto itemkey: item2Lines.keys())
+    {
+        QMap<QPointF, QSet<QPointF> > neighborhood;
+        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
+        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
+        auto contourPoints = geometryParser->findContour(startp,neighborhood);
 
-//        if(contourPoints.empty()) continue;
+        if(contourPoints.empty()) continue;
 
-//        QPainterPath path(contourPoints[0]/10);
-//        QList<QLineF> ls;
-//        for(int i = 1; i <  contourPoints.size();i++)
-//        {
-//            path.lineTo(contourPoints[i]/10);
-//            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
-//        }
-//        auto item = new CustomGraphicsPathItem(path);
-//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-//        p->setUndoStack(scene->getUndoStack());
-//        p->setChildLine(ls);
-//        QPen rrr( Qt::red);
-//        item->setPen(rrr);
-//        scene->addItem(item);
-//    }
+        QPainterPath path(contourPoints[0]/10);
+        QList<QLineF> ls;
+        for(int i = 1; i <  contourPoints.size();i++)
+        {
+            path.lineTo(contourPoints[i]/10);
+            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
+        }
+        auto item = new CustomGraphicsPathItem(path);
+        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+        p->setUndoStack(scene->getUndoStack());
+        p->setChildLine(ls);
+        QPen rrr( Qt::red,4);
+        item->setPen(rrr);
+        scene->addItem(item);
+    }
     QList<QGraphicsItem*> outitems = scene->items();
     dxfFileWrite(outitems);
+
+}
+
+void MainWindow::recognitionCutV(const QGraphicsItem *item)
+{
+    // 获取 item的所有线
+    auto  p = dynamic_cast<CustomGraphicsInterface*>(item);
+    if(p == nullptr) return;
+    auto lines = p->getChildLine();
+
+    // lines 是有序的 判断连续的两条线a、b是否满足 长度和夹角限制, a线和a线前一条线的夹角大于90度，小于160度
+    for (int i= 0; i < lines.size()-1;i++)
+    {
+        auto line1 = lines[i];
+        auto line2 = lines[i+1];
+        if(line1.length() < 10 || line2.length() < 10) continue;
+        auto angle = QVector2D(line1.p2() - line1.p1()).normalized().dotProduct(QVector2D(line2.p2() - line2.p1()).normalized());
+        if(angle < 0.5)
+        {
+            // 切割
+            auto p1 = line1.p1();
+            auto p2 = line2.p2();
+            auto line = QLineF(p1,p2);
+            auto item = new CustomGraphicsLineItem(line);
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+            p->setUndoStack(scene->getUndoStack());
+            scene->addItem(item);
+        }
+    }
+
+   
+
+void MainWindow::recognitionCutI(const QGraphicsItem *item)
+{
+}
+
+void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene) {
+
+    auto items =  scene->items();
+    QSet<QGraphicsItem*> filter;
+    for(auto item: items)
+    {
+        if(filter.contains(item))
+            continue;
+        // 获取和该图元重叠的其他图元
+        QList<QGraphicsItem*> collidingItems = scene->items(item->sceneBoundingRect(),Qt::ContainsItemShape);
+
+        if (!collidingItems.isEmpty()) {
+            // 如果有其他图元与当前图元重叠
+            for (QGraphicsItem* collidingItem : collidingItems) {
+                    // 如果重叠的图元 Z 值高于当前图元，则调整当前图元的 Z 值
+                filter.insert(collidingItem);
+                collidingItem->setZValue(item->zValue() + 1);
+            }
+        }
+    }
 
 }
 
@@ -354,6 +408,10 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
         bool bclose = false;
         if(QVector2D(retPoints.last().getPointF() - retPoints.first().getPointF()).length() < 2)
         {
+            if(retPoints.last().getPointF() != retPoints.first().getPointF())
+            {
+                retPoints.append(retPoints.first());
+            }
             bclose = true;
         }
 
@@ -406,6 +464,8 @@ void  MainWindow::openPltFile()
        convertPltData(data);
        populateSceneWithData(data);
     }
+    view->view()->setSceneRect(scene->sceneRect());
+    view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 
 }
 

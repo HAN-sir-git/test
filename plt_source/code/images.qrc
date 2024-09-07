@@ -8,6 +8,9 @@
         <file>fileprint.png</file>
         <file>image/open.png</file>
         <file>image/saveImage.png</file>
+        <file>image/lunkuo.png</file>
+        <file>image/V_jiankou.png</file>
+        <file>image/I_jiankou.png</file>
     </qresource>
     <qresource prefix="/image"/>
 </RCC>

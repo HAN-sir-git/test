@@ -106,6 +106,8 @@ public:
     QToolButton *openFileButton;
     QToolButton *exportImageButton;
     QToolButton *outlineRecognitionButton;
+    QToolButton *cutRecognitionButtonV;
+    QToolButton *cutRecognitionButtonI;
 
 public:
     GraphicsView *graphicsView;

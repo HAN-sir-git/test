@@ -2,10 +2,12 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
 #include <QCursor>
+#include <QPen>
 
 CustomGraphicsPolygonItem::CustomGraphicsPolygonItem(QGraphicsItem *parent)
     : QGraphicsPolygonItem(parent)
 {
+    setPen(QPen(Qt::black, 4));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);
@@ -14,6 +16,7 @@ CustomGraphicsPolygonItem::CustomGraphicsPolygonItem(QGraphicsItem *parent)
 CustomGraphicsPolygonItem::CustomGraphicsPolygonItem(const QPolygonF &polygon, QGraphicsItem *parent)
     : QGraphicsPolygonItem(polygon, parent)
 {
+    setPen(QPen(Qt::black, 4));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);

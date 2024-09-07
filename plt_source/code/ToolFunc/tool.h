@@ -3,7 +3,9 @@
 #include <QList>
 #include <QPointF>
 #include <QLineF>
+#include <QRectF>
 #include <QVector2D>
+#include <QPolygonF>
 
 // 线的关系
 enum LineRelation
@@ -42,6 +44,10 @@ public:
 
     /*****************************geometry relationship************************************************/
     static double angleBetweenVectors(const QVector2D& v1, const QVector2D& v2);
+
+    static qreal calculateIntersectionPercentage(const QRectF& rect1, const QRectF& rect2);
+
+    static qreal calculatePolygonArea(const QPolygonF& polygon);
     
 };
 

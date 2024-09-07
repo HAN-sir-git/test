@@ -4,9 +4,11 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
 #include <QCursor>
+#include <QPen>
 
 CustomGraphicsPathItem::CustomGraphicsPathItem(QGraphicsItem *parent): QGraphicsPathItem(parent)
 {
+    setPen(QPen(Qt::black, 4));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);
@@ -15,6 +17,7 @@ CustomGraphicsPathItem::CustomGraphicsPathItem(QGraphicsItem *parent): QGraphics
 CustomGraphicsPathItem::CustomGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent)
     : QGraphicsPathItem(path, parent)
 {
+    setPen(QPen(Qt::black, 4));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);

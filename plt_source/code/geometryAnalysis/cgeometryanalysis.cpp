@@ -2,10 +2,11 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QPainterPath>
-#include "CustomGraphicsItem/customgraphicsitem.h"
+#include "CustomGraphicsItem/customgraphicsheader.h"
 #include <cmath>
 #include <algorithm>
 #include "CommonDataForm/common_mathfunc.h"
+#include "tool.h"
 
 
 bool operator<(const QPointF& p1, const QPointF& p2) {
@@ -63,18 +64,6 @@ void CGeometryAnalysis::sortItemsByBoundingRectAreaDescending(QList<QGraphicsIte
     auto rect = m_scene->sceneRect();
     for (QGraphicsItem *item : items)
     {
-
-        // auto *lineItem = qgraphicsitem_cast<QGraphicsLineItem *>(item);
-        // if(lineItem )
-        // {
-        //     auto l = lineItem->line();
-        //     auto b = isLineCollinearWithRectangleEdge(l,box);
-        //     if(b || l.length() > box.width()*0.8)
-        //     {
-        //         filteritemlist.append(item);
-        //         continue;
-        //     }
-        // }
 
         auto area = qCeil(item->boundingRect().width() * item->boundingRect().height());
         if(area >= maxArea * 0.9)
@@ -200,8 +189,9 @@ QGraphicsItemListPtr CGeometryAnalysis::loopCluster(QGraphicsItem * item, QGraph
     while(!loopItems.isEmpty())
     {
         QGraphicsItem *item = loopItems.takeFirst();
-        QList<QGraphicsItem*> intersectingItems = scene->items(item->boundingRect(), Qt::IntersectsItemShape);
+        QList<QGraphicsItem*> intersectingItems = scene->items(item->sceneBoundingRect(), Qt::IntersectsItemShape);
         QPainterPath itemShape = item->shape();
+        auto itemRect = item->sceneBoundingRect();
 
         QTransform transform;
         transform.scale(scaleFactor, scaleFactor);
@@ -216,25 +206,55 @@ QGraphicsItemListPtr CGeometryAnalysis::loopCluster(QGraphicsItem * item, QGraph
             }
             // 判断itemShape是否遮挡了intersectingItem
             // 获取放大后的intersectingItem的shape
-                      QPainterPath intersectingItemShape = intersectingItem->shape();
-                      intersectingItemShape = transform.map(intersectingItemShape);
+            QPainterPath intersectingItemShape = intersectingItem->shape();
+            intersectingItemShape = transform.map(intersectingItemShape);
 
-            if(itemShape.contains(intersectingItemShape))
+            auto intersectingItemRect = intersectingItem->sceneBoundingRect();
+
+            //if(itemShape.contains(intersectingItemShape))
+            if(itemRect.contains(intersectingItemRect))
             {
                 // 如果遮挡了，则将intersectingItem加入到item的覆盖图元中
+                intersectingItem->setZValue(item->zValue()+1);
                 coveredItems.append(intersectingItem);
                 clusteredItems.insert(intersectingItem);
-                continue;
+
             }
             else if(itemShape.intersects(intersectingItemShape))
+            //else if(Tool::calculateIntersectionPercentage(itemRect,intersectingItemRect) > 70)
             {
                 auto intersectedPath = itemShape.intersected(intersectingItemShape);
                //auto subpaths = extractSubPaths(intersectedPath);
                 //paths.append(subpaths);
 
-                auto pol = intersectedPath.toSubpathPolygons();
-                polygons.append(pol);
+                // 判断两个图元都是闭合图元
+                auto CustomGraphicsPolygonItem = dynamic_cast<QGraphicsPolygonItem*>(item);
+                auto CustomGraphicsPolygonItem1 = dynamic_cast<QGraphicsPolygonItem*>(intersectingItem);
+                if(CustomGraphicsPolygonItem && CustomGraphicsPolygonItem1)
+                {
+                    auto pol = intersectedPath.toSubpathPolygons();
+                    // 获取 pol 得面积
+                    double areas = 0;
+                    for (auto p : pol)
+                    {
+                        auto area = Tool::calculatePolygonArea(p);
+                        areas += area;
+                    }
 
+                    auto p1 = CustomGraphicsPolygonItem->polygon();
+                    auto p2 = CustomGraphicsPolygonItem1->polygon();
+                    auto area1 = Tool::calculatePolygonArea(p1);
+                    auto area2 = Tool::calculatePolygonArea(p2);
+                    auto area = std::min(area1,area2);
+                    if(areas > area * 0.3)
+                    {
+                        // 如果intersectingItem遮挡了item，则将item加入到intersectingItem的聚类中
+                        loopItems.append(intersectingItem);
+                        cluster.append(intersectingItem);
+                        clusteredItems.insert(intersectingItem);
+                    }
+                    continue;
+                }
 
                 // 如果intersectingItem遮挡了item，则将item加入到intersectingItem的聚类中
                 loopItems.append(intersectingItem);

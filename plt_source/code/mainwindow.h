@@ -87,6 +87,13 @@ public slots:
 
     void populateScene();
 
+    void recognitionCutV( const  QGraphicsItem* item);
+
+    void recognitionCutI( const  QGraphicsItem* item);
+
+
+    void adjustZValueIfCovered( QGraphicsScene *scene);
+
 
     void dxfFileWrite(QList<QGraphicsItem *> items);
 

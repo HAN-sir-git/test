@@ -53,7 +53,9 @@ HEADERS += mainwindow.h view.h chip.h \
     Command/deletecommand.h \
     CDxfFileDataAnalysis/cdxfwriter.h \
     CommonDataForm/filterdxfrw.h \
-    CommonDataForm/block.h
+    CommonDataForm/block.h \
+    recComponent/CutPosRecognition/cutpos.h \
+    recComponent/CutPosRecognition/cutposv.h
 
 
 
@@ -76,7 +78,9 @@ SOURCES += main.cpp \
     Command/deletecommand.cpp \
     CDxfFileDataAnalysis/cdxfwriter.cpp \
     CommonDataForm/filterdxfrw.cpp \
-    CommonDataForm/block.cpp
+    CommonDataForm/block.cpp \
+    recComponent/CutPosRecognition/cutpos.cpp \
+    recComponent/CutPosRecognition/cutposv.cpp
 
 
 
@@ -97,3 +101,7 @@ INSTALLS += target
 
 DISTFILES += \
     image/lunkuo.png
+
+FORMS += \
+    recComponent/CutPosRecognition/cutpos.ui \
+    recComponent/CutPosRecognition/cutposv.ui

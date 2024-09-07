@@ -175,6 +175,7 @@ View::View(const QString &name, QWidget *parent)
     // 添加打开文件按钮
     openFileButton = new QToolButton;
     openFileButton->setText(tr("Open File"));
+    openFileButton->setToolTip("打开文件");
     openFileButton->setIcon(QIcon(QPixmap(":/image/open.png")));
 
     // 添加导出图片按钮
@@ -185,7 +186,20 @@ View::View(const QString &name, QWidget *parent)
     // 添加轮廓识别按钮
     outlineRecognitionButton = new QToolButton;
     outlineRecognitionButton->setText(tr("Outline Recognition"));
+    outlineRecognitionButton->setToolTip("外轮廓识别");
     outlineRecognitionButton->setIcon(QIcon(QPixmap(":/image/lunkuo.png")));
+
+    // 添加V剪口识别按钮
+    cutRecognitionButtonV = new QToolButton;
+    cutRecognitionButtonV->setText(tr("Cut Recognition"));
+    cutRecognitionButtonV->setToolTip("倒 V 型剪口识别");
+    cutRecognitionButtonV->setIcon(QIcon(QPixmap(":/image/V_jiankou.png")));
+
+    // 添加I型剪口识别
+    cutRecognitionButtonI = new QToolButton;
+    cutRecognitionButtonI->setText(tr("Cut Recognition"));
+    cutRecognitionButtonI->setToolTip("I 型剪口识别");
+    cutRecognitionButtonI->setIcon(QIcon(QPixmap(":/image/I_jiankou.png")));
 
     // 互斥按钮组
     QButtonGroup *pointerModeGroup = new QButtonGroup(this);
@@ -205,6 +219,8 @@ View::View(const QString &name, QWidget *parent)
     labelLayout->addWidget(openFileButton);
     //labelLayout->addWidget(exportImageButton);
     labelLayout->addWidget(outlineRecognitionButton);
+    labelLayout->addWidget(cutRecognitionButtonV);
+    labelLayout->addWidget(cutRecognitionButtonI);
 
     QGridLayout *topLayout = new QGridLayout;
     topLayout->addLayout(labelLayout, 0, 0);

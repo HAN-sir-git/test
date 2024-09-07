@@ -64,6 +64,46 @@ double Tool::angleBetweenVectors(const QVector2D &v1, const QVector2D &v2)
         return degreeAngle;
 }
 
+qreal Tool::calculateIntersectionPercentage(const QRectF &rect1, const QRectF &rect2) {
+    // 获取相交部分的矩形
+    QRectF intersection = rect1.intersected(rect2);
+
+    // 如果没有交集，直接返回 0
+    if (intersection.isEmpty()) {
+        return 0.0;
+    }
+
+    // 计算相交部分的面积
+    qreal intersectionArea = intersection.width() * intersection.height();
+
+    // 计算两个矩形的面积
+    qreal area1 = rect1.width() * rect1.height();
+    qreal area2 = rect2.width() * rect2.height();
+
+    // 找出较小矩形的面积
+    qreal minArea = qMin(area1, area2);
+
+    // 计算百分比
+    qreal percentage = (intersectionArea / minArea) * 100.0;
+
+    return percentage;
+}
+
+qreal Tool::calculatePolygonArea(const QPolygonF &polygon) {
+    qreal area = 0.0;
+    int n = polygon.size();
+    if (n < 3) return 0.0; // 多边形至少需要三个点
+
+    for (int i = 0; i < n; ++i) {
+        QPointF p1 = polygon[i];
+        QPointF p2 = polygon[(i + 1) % n];
+        area += p1.x() * p2.y() - p2.x() * p1.y();
+    }
+
+    area = std::abs(area) / 2.0;
+    return area;
+}
+
 bool Tool::pointInsideLine(const QPointF &coord, const QLineF &line)
 {
     QVector2D P = QVector2D(coord);
