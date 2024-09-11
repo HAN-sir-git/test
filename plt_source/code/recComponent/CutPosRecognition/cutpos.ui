@@ -19,7 +19,7 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="cutV">
+     <widget class="CutPosV" name="cutV">
       <attribute name="title">
        <string>Tab 1</string>
       </attribute>
@@ -33,6 +33,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CutPosV</class>
+   <extends>QWidget</extends>
+   <header location="global">recComponent\CutPosRecognition\cutposv.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

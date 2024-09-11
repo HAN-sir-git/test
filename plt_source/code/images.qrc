@@ -11,6 +11,7 @@
         <file>image/lunkuo.png</file>
         <file>image/V_jiankou.png</file>
         <file>image/I_jiankou.png</file>
+        <file>image/V.png</file>
     </qresource>
     <qresource prefix="/image"/>
 </RCC>

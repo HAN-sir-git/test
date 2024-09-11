@@ -51,6 +51,7 @@
 #include "chip.h"
 #include "mainwindow.h"
 #include "cgraphicssence.h"
+#include "tool.h"
 
 #include <QHBoxLayout>
 #include <QSplitter>
@@ -103,8 +104,8 @@ void MainWindow::initConnect()
     connect(view->openFileButton, &QToolButton::clicked, this, &MainWindow::openPltFile);
     //connect(view->exportImageButton, &QToolButton::clicked, this, &MainWindow::saveSceneExample);
     connect(view->outlineRecognitionButton, &QToolButton::clicked, this, &MainWindow::populateScene);
-    connect(view->cutRecognitionButtonV, &QToolButton::clicked, this, &MainWindow::recognitionCutV);
-    connect(view->cutRecognitionButtonI, &QToolButton::clicked, this, &MainWindow::recognitionCutI);
+    connect(view->cutRecognitionButtonV, &QToolButton::clicked, this, &MainWindow::recognitionCutAllV);
+    connect(view->cutRecognitionButtonI, &QToolButton::clicked, this, &MainWindow::recognitionCutAllI);
 }
 
 
@@ -233,39 +234,62 @@ void MainWindow::populateScene()
 
 }
 
-void MainWindow::recognitionCutV(const QGraphicsItem *item)
+
+void MainWindow::recognitionCutV( QGraphicsItem *item)
 {
+    QList <QList <QLineF>> cutVs;
+    RecognizedCutV v;
     // 获取 item的所有线
     auto  p = dynamic_cast<CustomGraphicsInterface*>(item);
     if(p == nullptr) return;
-    auto lines = p->getChildLine();
+    auto lines = p->childLine();
 
     // lines 是有序的 判断连续的两条线a、b是否满足 长度和夹角限制, a线和a线前一条线的夹角大于90度，小于160度
     for (int i= 0; i < lines.size()-1;i++)
     {
-        auto line1 = lines[i];
-        auto line2 = lines[i+1];
-        if(line1.length() < 10 || line2.length() < 10) continue;
-        auto angle = QVector2D(line1.p2() - line1.p1()).normalized().dotProduct(QVector2D(line2.p2() - line2.p1()).normalized());
-        if(angle < 0.5)
+        auto line1 = lines[ (i-1 + lines.size()) % lines.size()];
+        auto line2 = lines[i];
+        auto line3 = lines[(i+1) % lines.size()];
+        auto line4 = lines[(i+2) % lines.size()];
+
+        
+        QPointF p12;
+        line1.intersects(line2,&p12);
+        // 作p12到另外两个点的向量 先判断p12 是哪个点
+        QVector2D v1 = QVector2D( p12 == line2.p1() ? line2.p2() : line2.p1() - p12);
+        QVector2D v2 = QVector2D( p12 == line3.p1() ? line3.p2() : line3.p1() - p12);
+
+        // 计算夹角
+        double angleA = Tool::angleBetweenVectors(v1,v2);
+
+        QPointF p23;
+        line2.intersects(line3,&p23);
+        // 作p23到另外两个点的向量 先判断p23 是哪个点
+        v1 = QVector2D( p23 == line3.p1() ? line3.p2() : line3.p1() - p23);
+        v2 = QVector2D( p23 == line4.p1() ? line4.p2() : line4.p1() - p23);
+
+        // 计算夹角
+        double angleB = Tool::angleBetweenVectors(v1,v2);
+
+        QpointF p34;
+        line3.intersects(line4,&p34);
+        // 作p34到另外两个点的向量 先判断p34 是哪个点
+        v1 = QVector2D( p34 == line4.p1() ? line4.p2() : line4.p1() - p34);
+        v2 = QVector2D( p34 == line1.p1() ? line1.p2() : line1.p1() - p34);
+
+        // 计算夹角
+        double angleC = Tool::angleBetweenVectors(v1,v2);
+
+        if(angleA >= v.pre_A_angle && angleA <= v.after_A_angle 
+            && angleB >= v.pre_B_angle && angleB <= v.after_B_angle 
+            && angleC >= v.pre_C_angle && angleC <= v.after_C_angle)
         {
-            // 切割
-            auto p1 = line1.p1();
-            auto p2 = line2.p2();
-            auto line = QLineF(p1,p2);
-            auto item = new CustomGraphicsLineItem(line);
-            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-            p->setUndoStack(scene->getUndoStack());
-            scene->addItem(item);
-        }
+            // 保存line2和line3 作为V剪口
+            cutVs.append({line2,line3});
+        }  
     }
 
-   
-
-void MainWindow::recognitionCutI(const QGraphicsItem *item)
-{
 }
-
 void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene) {
 
     auto items =  scene->items();
@@ -305,6 +329,18 @@ void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
 
 }
 
+void MainWindow::recognitionCutAllV()
+{
+    auto items = scene->selectedItems();
+    for(auto item: items)
+    {
+        recognitionCutV(item);
+    }
+}
+
+void MainWindow::recognitionCutAllI()
+{
+}
 
 void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
 {
