@@ -230,22 +230,22 @@ void MainWindow::populateScene()
         scene->addItem(item);
     }
     QList<QGraphicsItem*> outitems = scene->items();
-    dxfFileWrite(outitems);
+   // dxfFileWrite(outitems);
 
 }
 
 
-void MainWindow::recognitionCutV( QGraphicsItem *item)
+QList <QList <QLineF>> MainWindow::recognitionCutV( QGraphicsItem *item)
 {
     QList <QList <QLineF>> cutVs;
     RecognizedCutV v;
     // 获取 item的所有线
     auto  p = dynamic_cast<CustomGraphicsInterface*>(item);
-    if(p == nullptr) return;
+    if(p == nullptr) return cutVs;
     auto lines = p->childLine();
 
     // lines 是有序的 判断连续的两条线a、b是否满足 长度和夹角限制, a线和a线前一条线的夹角大于90度，小于160度
-    for (int i= 0; i < lines.size()-1;i++)
+    for (int i= 0; i < lines.size();i++)
     {
         auto line1 = lines[ (i-1 + lines.size()) % lines.size()];
         auto line2 = lines[i];
@@ -256,8 +256,8 @@ void MainWindow::recognitionCutV( QGraphicsItem *item)
         QPointF p12;
         line1.intersects(line2,&p12);
         // 作p12到另外两个点的向量 先判断p12 是哪个点
-        QVector2D v1 = QVector2D( p12 == line2.p1() ? line2.p2() : line2.p1() - p12);
-        QVector2D v2 = QVector2D( p12 == line3.p1() ? line3.p2() : line3.p1() - p12);
+        QVector2D v1 = QVector2D( (p12 == line1.p1() ? line1.p2() : line1.p1()) - p12);
+        QVector2D v2 = QVector2D( (p12 == line2.p1() ? line2.p2() : line2.p1()) - p12);
 
         // 计算夹角
         double angleA = Tool::angleBetweenVectors(v1,v2);
@@ -265,17 +265,17 @@ void MainWindow::recognitionCutV( QGraphicsItem *item)
         QPointF p23;
         line2.intersects(line3,&p23);
         // 作p23到另外两个点的向量 先判断p23 是哪个点
-        v1 = QVector2D( p23 == line3.p1() ? line3.p2() : line3.p1() - p23);
-        v2 = QVector2D( p23 == line4.p1() ? line4.p2() : line4.p1() - p23);
+        v1 = QVector2D( (p23 == line2.p1() ? line2.p2() : line2.p1()) - p23);
+        v2 = QVector2D( (p23 == line3.p1() ? line3.p2() : line3.p1()) - p23);
 
         // 计算夹角
         double angleB = Tool::angleBetweenVectors(v1,v2);
 
-        QpointF p34;
+        QPointF p34;
         line3.intersects(line4,&p34);
         // 作p34到另外两个点的向量 先判断p34 是哪个点
-        v1 = QVector2D( p34 == line4.p1() ? line4.p2() : line4.p1() - p34);
-        v2 = QVector2D( p34 == line1.p1() ? line1.p2() : line1.p1() - p34);
+        v1 = QVector2D( (p34 == line3.p1() ? line3.p2() : line3.p1()) - p34);
+        v2 = QVector2D( (p34 == line4.p1() ? line4.p2() : line4.p1()) - p34);
 
         // 计算夹角
         double angleC = Tool::angleBetweenVectors(v1,v2);
@@ -288,6 +288,12 @@ void MainWindow::recognitionCutV( QGraphicsItem *item)
             cutVs.append({line2,line3});
         }  
     }
+
+    return cutVs;
+}
+
+QList<QList<QLineF> > MainWindow::recognitionCutI(QGraphicsItem *item)
+{
 
 }
 void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene) {
@@ -329,16 +335,41 @@ void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
 
 }
 
-void MainWindow::recognitionCutAllV()
+QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutAllV()
 {
+    QMap<QGraphicsItem*,QList<QList<QLineF>>> item2Cutv;
     auto items = scene->selectedItems();
     for(auto item: items)
     {
-        recognitionCutV(item);
+        auto cuts = recognitionCutV(item);
+        item2Cutv[item] = cuts;
     }
+
+
+    for(auto itemkey: item2Cutv.keys())
+    {
+
+        auto lineslist = item2Cutv[itemkey];
+        for(auto lines: lineslist)
+        {
+
+            for(int i = 0; i < lines.size();i++)
+            {
+                auto item = new CustomGraphicsLineItem(QLineF(lines[i].p1()/10,lines[i].p2()/10));
+                CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+                p->setUndoStack(scene->getUndoStack());
+                p->setChildLine({lines[i]});
+                QPen rrr( Qt::green,4);
+                item->setPen(rrr);
+                scene->addItem(item);
+            }
+        }
+    }
+
+    return item2Cutv;
 }
 
-void MainWindow::recognitionCutAllI()
+QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutAllI()
 {
 }
 

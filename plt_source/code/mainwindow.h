@@ -67,12 +67,12 @@ QT_END_NAMESPACE
 
 struct RecognizedCutV
 {
-    int pre_A_angle = 0;
-    int after_A_angle = 180;
+    int pre_A_angle = 90;
+    int after_A_angle = 160;
     int pre_B_angle = 40;
-    int after_B_angle = 60;
-    int pre_C_angle = 0;
-    int after_C_angle = 180;
+    int after_B_angle = 80;
+    int pre_C_angle = 90;
+    int after_C_angle = 160;
 
 };
 
@@ -105,10 +105,10 @@ public slots:
     void dxfFileWrite(QList<QGraphicsItem *> items);
 
     // 识别选中的图元的V剪口
-    void recognitionCutAllV();
+    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutAllV();
 
     // 识别选中的图元的I剪口
-    void recognitionCutAllI();
+    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutAllI();
 
 public:
 
@@ -121,9 +121,9 @@ private:
 
     void ConvertPolyLine2path(const PolyLinePtrList &polyLineList);
     // 识别单轮廓的V型剪口
-    void recognitionCutV( QGraphicsItem* item);
+    QList <QList <QLineF>> recognitionCutV( QGraphicsItem* item);
     // 识别单轮廓的I型剪口
-    void recognitionCutI( QGraphicsItem* item);
+    QList <QList <QLineF>> recognitionCutI( QGraphicsItem* item);
 
 
 public:
