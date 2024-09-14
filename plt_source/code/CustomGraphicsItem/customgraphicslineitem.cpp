@@ -6,7 +6,7 @@
 
 CustomGraphicsLineItem::CustomGraphicsLineItem(QGraphicsItem *parent)
     : QGraphicsLineItem(parent) {
-    setPen(QPen(Qt::black, 4));
+    setPen(QPen(Qt::black, 40));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);
@@ -14,7 +14,7 @@ CustomGraphicsLineItem::CustomGraphicsLineItem(QGraphicsItem *parent)
 
 CustomGraphicsLineItem::CustomGraphicsLineItem(const QLineF &line, QGraphicsItem *parent)
     : QGraphicsLineItem(line, parent) {
-    setPen(QPen(Qt::black, 4));
+    setPen(QPen(Qt::black, 40));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);

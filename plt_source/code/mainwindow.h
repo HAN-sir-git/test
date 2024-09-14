@@ -85,6 +85,15 @@ public:
     MainWindow(QWidget *parent = 0);
 
     void initConnect();
+    // 重设置场景
+    void resetSence();
+    // 清理变量
+    void clearVar();
+
+
+
+protected:
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 public slots:
     // 工具栏函数部分
@@ -105,10 +114,11 @@ public slots:
     void dxfFileWrite(QList<QGraphicsItem *> items);
 
     // 识别选中的图元的V剪口
-    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutAllV();
+    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutSelectedV();
 
     // 识别选中的图元的I剪口
-    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutAllI();
+    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutSelectedI();
+
 
 public:
 
@@ -125,11 +135,45 @@ private:
     // 识别单轮廓的I型剪口
     QList <QList <QLineF>> recognitionCutI( QGraphicsItem* item);
 
+public:
+    // 菜单栏函数部分 
+    QMenu* createMenu();
+
+public slots:
+    // 导出所有图元到dxf文件
+    void dxfFileWriteAllItems();
+    // 导出选中的图元到dxf文件
+    void dxfFileWriteSelectedItems();
+    // 导出外轮廓到dxf文件
+    void dxfFileWriteOuterContour();
+    // 导出内轮廓到dxf文件
+    void dxfFileWriteInnerContour();
+    // 导出剪口和外轮廓到dxf文件
+    void dxfFileWriteCutAndOuterContour();
+    // 导出剪口和外轮廓和过切到dxf文件
+    void dxfFileWriteCutAndOuterContourAndOverCut();
+
+    // 识别V型剪口
+    // 识别所有图元的V型剪口
+    void recognitionCutAllV();
+    // 识别选中的图元的V型剪口
+    void recognitionCutSelectedV();
+    // 识别所有图元的I型剪口
+    void recognitionCutAllI();
+    // 识别选中的图元的I型剪口
+    void recognitionCutSelectedI();
+
+    // 过切识别
+    // 识别所有图元的过切
+    void recognitionOverCutAll();
+    // 识别选中的图元的过切
+    void recognitionOverCutSelected();
+
+
 
 public:
 
-    //opencv做轮廓检测
-   // void opencvtest1(const QString& path);
+    QMenu* menu;
     CGeometryAnalysis* geometryParser;
     CGraphicsScene *scene;
     View *view;
@@ -137,7 +181,7 @@ public:
     CDxfWriter *dxfWriter;
     // kdtree struct
     Kdtree::KdNodeVector endpointNodes;
-    Kdtree::KdTree* endpointTree;
+    Kdtree::KdTree* endpointTree = nullptr;
 };
 
 #endif // MAINWINDOW_H

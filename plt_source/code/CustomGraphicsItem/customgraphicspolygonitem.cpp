@@ -7,7 +7,7 @@
 CustomGraphicsPolygonItem::CustomGraphicsPolygonItem(QGraphicsItem *parent)
     : QGraphicsPolygonItem(parent)
 {
-    setPen(QPen(Qt::black, 4));
+    setPen(QPen(Qt::black, 40));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);
@@ -16,7 +16,7 @@ CustomGraphicsPolygonItem::CustomGraphicsPolygonItem(QGraphicsItem *parent)
 CustomGraphicsPolygonItem::CustomGraphicsPolygonItem(const QPolygonF &polygon, QGraphicsItem *parent)
     : QGraphicsPolygonItem(polygon, parent)
 {
-    setPen(QPen(Qt::black, 4));
+    setPen(QPen(Qt::black, 40));
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemIsFocusable);

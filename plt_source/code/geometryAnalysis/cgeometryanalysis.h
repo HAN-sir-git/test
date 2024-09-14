@@ -18,6 +18,8 @@ class CGeometryAnalysis: public QObject
     Q_OBJECT
 public:
     CGeometryAnalysis(QGraphicsScene *scene);
+
+    void setScene(QGraphicsScene *scene);
     ~CGeometryAnalysis();
 
 

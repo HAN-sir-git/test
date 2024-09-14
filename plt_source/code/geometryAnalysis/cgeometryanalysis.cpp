@@ -29,6 +29,11 @@ CGeometryAnalysis::CGeometryAnalysis(QGraphicsScene *scene)
     m_Area2ItemMap.clear();
 }
 
+void CGeometryAnalysis::setScene(QGraphicsScene *scene)
+{
+   m_scene = scene;
+}
+
 CGeometryAnalysis::~CGeometryAnalysis()
 {
 }

@@ -10,7 +10,7 @@ const QVector<QPointF> PolyLine::getQPointFs()
 {
     QVector<QPointF> points;
     for (auto &p : data.points) {
-        points.append(p.getPointF()/10);
+        points.append(p.getPointF());
     }
     return points;
 }

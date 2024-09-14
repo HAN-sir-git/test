@@ -53,6 +53,7 @@
 #include "cgraphicssence.h"
 #include "tool.h"
 
+#include <QSlider>
 #include <QHBoxLayout>
 #include <QSplitter>
 #include <QFileDialog>
@@ -66,6 +67,8 @@
 #include <QVector2D>
 #include <QVector>
 #include <algorithm>
+#include <QMenu>
+#include <QContextMenuEvent>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -75,6 +78,7 @@ MainWindow::MainWindow(QWidget *parent)
     parser  = new PltFileData();
     scene = new CGraphicsScene(this);
     dxfWriter = new CDxfWriter;
+//    endpointTree = new Kdtree::KdTree(&endpointNodes);
 
     QAction *undoAction = scene->getUndoStack()->createUndoAction(this, tr("&Undo"));
     undoAction->setShortcut(QKeySequence::Undo);  // Ctrl+Z
@@ -104,11 +108,48 @@ void MainWindow::initConnect()
     connect(view->openFileButton, &QToolButton::clicked, this, &MainWindow::openPltFile);
     //connect(view->exportImageButton, &QToolButton::clicked, this, &MainWindow::saveSceneExample);
     connect(view->outlineRecognitionButton, &QToolButton::clicked, this, &MainWindow::populateScene);
-    connect(view->cutRecognitionButtonV, &QToolButton::clicked, this, &MainWindow::recognitionCutAllV);
-    connect(view->cutRecognitionButtonI, &QToolButton::clicked, this, &MainWindow::recognitionCutAllI);
+    connect(view->cutRecognitionButtonV, &QToolButton::clicked, this, &MainWindow::recognitionCutSelectedV);
+    connect(view->cutRecognitionButtonI, &QToolButton::clicked, this, &MainWindow::recognitionCutSelectedI);
 }
 
+void MainWindow::resetSence()
+{
+    if(scene)
+    {
+        delete scene;
+        scene = nullptr;
+    }
 
+    scene = new CGraphicsScene(this);
+
+
+    QAction *undoAction = scene->getUndoStack()->createUndoAction(this, tr("&Undo"));
+    undoAction->setShortcut(QKeySequence::Undo);  // Ctrl+Z
+    addAction(undoAction);
+
+    QAction *redoAction = scene->getUndoStack()->createRedoAction(this, tr("&Redo"));
+    redoAction->setShortcut(QKeySequence::Redo);  // Ctrl+Y
+    addAction(redoAction);
+    if(view)
+        view->view()->setScene(scene);
+    if(geometryParser)
+        geometryParser->setScene(scene);
+
+}
+
+void MainWindow::clearVar()
+{
+
+}
+
+void MainWindow::contextMenuEvent(QContextMenuEvent *event)
+{
+    menu = createMenu();
+    menu->exec(QCursor::pos());
+    // 使用完后删除
+    menu->deleteLater();
+    menu = nullptr;  // 避免重复删除
+}
 
 void MainWindow::populateScene()
 {
@@ -205,32 +246,32 @@ void MainWindow::populateScene()
 
      //绘制聚类后一组集合的轮廓
 
-    for(auto itemkey: item2Lines.keys())
-    {
-        QMap<QPointF, QSet<QPointF> > neighborhood;
-        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
-        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
-        auto contourPoints = geometryParser->findContour(startp,neighborhood);
+//    for(auto itemkey: item2Lines.keys())
+//    {
+//        QMap<QPointF, QSet<QPointF> > neighborhood;
+//        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
+//        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
+//        auto contourPoints = geometryParser->findContour(startp,neighborhood);
 
-        if(contourPoints.empty()) continue;
+//        if(contourPoints.empty()) continue;
 
-        QPainterPath path(contourPoints[0]/10);
-        QList<QLineF> ls;
-        for(int i = 1; i <  contourPoints.size();i++)
-        {
-            path.lineTo(contourPoints[i]/10);
-            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
-        }
-        auto item = new CustomGraphicsPathItem(path);
-        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-        p->setUndoStack(scene->getUndoStack());
-        p->setChildLine(ls);
-        QPen rrr( Qt::red,4);
-        item->setPen(rrr);
-        scene->addItem(item);
-    }
+//        QPainterPath path(contourPoints[0]);
+//        QList<QLineF> ls;
+//        for(int i = 1; i <  contourPoints.size();i++)
+//        {
+//            path.lineTo(contourPoints[i]);
+//            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
+//        }
+//        auto item = new CustomGraphicsPathItem(path);
+//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+//        p->setUndoStack(scene->getUndoStack());
+//        p->setChildLine(ls);
+//        QPen rrr( Qt::red,40);
+//        item->setPen(rrr);
+//        scene->addItem(item);
+//    }
     QList<QGraphicsItem*> outitems = scene->items();
-   // dxfFileWrite(outitems);
+    dxfFileWrite(outitems);
 
 }
 
@@ -296,7 +337,45 @@ QList<QList<QLineF> > MainWindow::recognitionCutI(QGraphicsItem *item)
 {
 
 }
-void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene) {
+
+QMenu *MainWindow::createMenu()
+{
+    QMenu* menu = new QMenu(this);
+
+    QMenu* menu1 = new QMenu(tr("dxf文件导出"),menu);
+    QMenu* menu2 = new QMenu(tr("剪口识别"),menu);
+    QMenu* menu3 = new QMenu(tr("生成过切"),menu);
+
+    QAction* action11 = menu1->addAction(tr("导出所有图元"),this,SLOT(dxfFileWriteAllItem()));
+    QAction* action12 = menu1->addAction(tr("导出选中图元"),this,SLOT(dxfFileWriteSelectedItem()));
+    QAction* action13 = menu1->addAction(tr("导出外轮廓"),this,SLOT(dxfFileWriteOuterContour()));
+    QAction* action14 = menu1->addAction(tr("导出内轮廓"),this,SLOT(dxfFileWriteInnerContour()));
+    QAction* action15 = menu1->addAction(tr("导出剪口&外轮廓"),this,SLOT(dxfFileWriteCutAndOuterContour()));
+    QAction* action16 = menu1->addAction(tr("导出剪口&外轮廓&过切"),this,SLOT(dxfFileWriteCutAndOuterContourAndOverCut()));
+
+    QMenu* menu21 = new QMenu(tr("V剪口"),menu2);
+    QAction* action211 = menu21->addAction(tr("识别所有图元"),this,SLOT(recognitionCutAllV()));
+    QAction* action212 = menu21->addAction(tr("识别选中图元"),this,SLOT(recognitionCutSelectedV()));
+
+    QMenu* menu22 = new QMenu(tr("I剪口"),menu2);
+    QAction* action221 = menu22->addAction(tr("识别所有图元"),this,SLOT(recognitionCutAllI()));
+    QAction* action222 = menu22->addAction(tr("识别选中图元"),this,SLOT(recognitionCutSelectedI()));
+
+    QAction* action31 = menu3->addAction(tr("生成所有图元"),this,SLOT(recognitionOverCutAll()));
+    QAction* action32 = menu3->addAction(tr("生成选中图元"),this,SLOT(recognitionOverCutSelected()));
+
+    menu2->addMenu(menu21);
+    menu2->addMenu(menu22);
+
+    menu->addMenu(menu1);
+    menu->addMenu(menu2);
+    menu->addMenu(menu3);
+
+    return  menu;
+}
+
+void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene)
+{
 
     auto items =  scene->items();
     QSet<QGraphicsItem*> filter;
@@ -316,7 +395,6 @@ void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene) {
             }
         }
     }
-
 }
 
 void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
@@ -335,7 +413,7 @@ void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
 
 }
 
-QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutAllV()
+QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutSelectedV()
 {
     QMap<QGraphicsItem*,QList<QList<QLineF>>> item2Cutv;
     auto items = scene->selectedItems();
@@ -346,31 +424,14 @@ QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutAllV()
     }
 
 
-    for(auto itemkey: item2Cutv.keys())
-    {
 
-        auto lineslist = item2Cutv[itemkey];
-        for(auto lines: lineslist)
-        {
-
-            for(int i = 0; i < lines.size();i++)
-            {
-                auto item = new CustomGraphicsLineItem(QLineF(lines[i].p1()/10,lines[i].p2()/10));
-                CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-                p->setUndoStack(scene->getUndoStack());
-                p->setChildLine({lines[i]});
-                QPen rrr( Qt::green,4);
-                item->setPen(rrr);
-                scene->addItem(item);
-            }
-        }
-    }
 
     return item2Cutv;
 }
 
-QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutAllI()
+QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutSelectedI()
 {
+
 }
 
 void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
@@ -410,6 +471,10 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
         while(!points.isEmpty())
         {
             auto point1 = points.takeFirst().getPointF();
+            if(point1.x() < 40001  && point1.x() > 39999)
+            {
+                auto x= 1;
+            }
             std::vector<double> coord_point(2);
             Kdtree::KdNodeVector result;
             coord_point[0] = point1.x();
@@ -491,6 +556,7 @@ void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
 
 void MainWindow::createEndPointKdTree(PolyLinePtrList polyLineList)
 {
+   endpointNodes.clear();
    for (int i = 0;i < polyLineList.size();i++)
    {
        auto& pl = polyLineList[i];
@@ -510,6 +576,11 @@ void MainWindow::createEndPointKdTree(PolyLinePtrList polyLineList)
        Kdtree::KdNode node2(point,nullptr,i);
        endpointNodes.push_back(node2);
    }
+   if(endpointTree != nullptr)
+   {
+       delete endpointTree;
+       endpointTree = nullptr;
+   }
    endpointTree = new Kdtree::KdTree(&endpointNodes);
 }
 
@@ -522,7 +593,7 @@ void MainWindow::convertPltData(std::shared_ptr<ConvertData>& data)
 
 void  MainWindow::openPltFile()
 {
-    scene->clear();
+    resetSence();
     if(parser->ParsePltFile())
     {
        auto data = parser->getPltData();
@@ -531,8 +602,19 @@ void  MainWindow::openPltFile()
        convertPltData(data);
        populateSceneWithData(data);
     }
+    qDebug() << scene->sceneRect();
     view->view()->setSceneRect(scene->sceneRect());
     view->view()->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+
+    QTransform transform = view->view()->transform();
+    // 获取水平缩放值（一般水平和垂直缩放是一致的）
+    qreal scale = transform.m11();  // 或者使用 transform.m22()，取其一
+
+    // 使用 log2 计算 zoomSlider 的值，逆向推导
+    int zoomSliderValue = 2500 + qRound(50 * std::log2(scale));
+
+    // 设置 zoomSlider 的值
+    view->zoomSlider->setValue(zoomSliderValue);
 
 }
 
