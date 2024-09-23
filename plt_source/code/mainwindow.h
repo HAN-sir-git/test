@@ -104,21 +104,13 @@ public slots:
     // Greate KDtree
     void createEndPointKdTree(PolyLinePtrList polyLineList);
 
-    //pltData 转换到 需要的数据结构
+    // pltData 转换到 需要的数据结构
     void convertPltData(std::shared_ptr<ConvertData >& data);
 
-    void populateScene();
-
+    // 重叠图元Z轴调整
     void adjustZValueIfCovered( QGraphicsScene *scene);
 
     void dxfFileWrite(QList<QGraphicsItem *> items);
-
-    // 识别选中的图元的V剪口
-    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutSelectedV();
-
-    // 识别选中的图元的I剪口
-    QMap<QGraphicsItem*,QList<QList<QLineF>>> recognitionCutSelectedI();
-
 
 public:
 
@@ -135,11 +127,20 @@ private:
     // 识别单轮廓的I型剪口
     QList <QList <QLineF>> recognitionCutI( QGraphicsItem* item);
 
+    // 增加ret外轮廓到场景
+    void addOuterContourToScene(QMap<QGraphicsItem*, QGraphicsItemListPtr>& ret);
+
 public:
     // 菜单栏函数部分 
     QMenu* createMenu();
 
 public slots:
+    // 识别外轮廓
+    void populateScene();
+    // 识别选中的图元的外轮廓
+    void populateSelectedScene();
+    // 清空外轮廓
+    void clearOuterContour();
     // 导出所有图元到dxf文件
     void dxfFileWriteAllItems();
     // 导出选中的图元到dxf文件
@@ -182,6 +183,14 @@ public:
     // kdtree struct
     Kdtree::KdNodeVector endpointNodes;
     Kdtree::KdTree* endpointTree = nullptr;
+
+private:
+    // 聚类结果
+    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret ;
+    QList<QGraphicsItem*> outerContourList;  // 外轮廓
+    // 剪口
+    QList<QGraphicsItem*> cutList;
+
 };
 
 #endif // MAINWINDOW_H

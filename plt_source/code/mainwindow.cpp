@@ -69,6 +69,7 @@
 #include <algorithm>
 #include <QMenu>
 #include <QContextMenuEvent>
+#include <QMessageBox>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -160,47 +161,15 @@ void MainWindow::populateScene()
 
     QList<QGraphicsItem *> filter;
     geometryParser->sortItemsByBoundingRectAreaDescending(items,geometryParser->m_Area2ItemMap,filter,parser->getBox());
-    for(auto x :filter)
+    for(auto item :filter)
     {
-        items.removeAll(x);
-        scene->removeItem(x);
+        items.removeAll(item);
+        scene->removeItem(item);
     }
 
-    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret =geometryParser->intersectItemsLoopCluster(items,scene,filter);
-
-    QMap<QGraphicsItem*, QList<QLineF>> item2Lines = geometryParser->convertToLineMap(ret);
-
-
-    // 显示聚类时候的相交路径判断
-
-//    for(auto pl: geometryParser->paths)
-//    {
-//        QPen rrr(  Qt::red);
-//        auto item = new CustomGraphicsPathItem(pl);
-//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-//        p->setUndoStack(scene->getUndoStack());
-//        item->setPen(rrr);
-//        scene->addItem(item);
-//    }
-
-//    for (auto pol: geometryParser->polygons)
-//    {
-
-//        pol.pop_back();
-//        QPainterPath path;
-//        if(!pol.empty()) path.moveTo(pol.takeFirst());
-//        for(auto p: pol)
-//        {
-//            path.lineTo(p);
-//        }
-
-//        QPen rrr(  Qt::red);
-//        auto item = new CustomGraphicsPathItem(path);
-//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-//        p->setUndoStack(scene->getUndoStack());
-//        item->setPen(rrr);
-//        scene->addItem(item);
-//    }
+    ret = geometryParser->intersectItemsLoopCluster(items,scene,filter);
+    outerContourList.clear();
+    addOuterContourToScene(ret);
 
 
      //显示聚类后的分类边框
@@ -244,34 +213,6 @@ void MainWindow::populateScene()
 //        scene->addItem(item);
 //    }
 
-     //绘制聚类后一组集合的轮廓
-
-//    for(auto itemkey: item2Lines.keys())
-//    {
-//        QMap<QPointF, QSet<QPointF> > neighborhood;
-//        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
-//        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
-//        auto contourPoints = geometryParser->findContour(startp,neighborhood);
-
-//        if(contourPoints.empty()) continue;
-
-//        QPainterPath path(contourPoints[0]);
-//        QList<QLineF> ls;
-//        for(int i = 1; i <  contourPoints.size();i++)
-//        {
-//            path.lineTo(contourPoints[i]);
-//            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
-//        }
-//        auto item = new CustomGraphicsPathItem(path);
-//        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-//        p->setUndoStack(scene->getUndoStack());
-//        p->setChildLine(ls);
-//        QPen rrr( Qt::red,40);
-//        item->setPen(rrr);
-//        scene->addItem(item);
-//    }
-    QList<QGraphicsItem*> outitems = scene->items();
-    dxfFileWrite(outitems);
 
 }
 
@@ -338,6 +279,42 @@ QList<QList<QLineF> > MainWindow::recognitionCutI(QGraphicsItem *item)
 
 }
 
+void MainWindow::addOuterContourToScene(QMap<QGraphicsItem *, QGraphicsItemListPtr> &ret1)
+{
+    QMap<QGraphicsItem*, QList<QLineF>> item2Lines = geometryParser->convertToLineMap(ret1);
+     //绘制聚类后轮廓
+
+    for(auto itemkey: item2Lines.keys())
+    {
+        // 获取真正外轮廓算法
+        QMap<QPointF, QSet<QPointF> > neighborhood;
+        auto breaklines = geometryParser->breakLinesByIntersections(item2Lines[itemkey],neighborhood);
+        auto startp = geometryParser->findBottomLeftPoint(neighborhood.keys());
+        auto contourPoints = geometryParser->findContour(startp,neighborhood);
+
+
+        // 根据绘图习惯，大概率外轮廓是一个闭合的图元，因此可以筛选出内轮廓图元集合并与外轮廓对应
+
+        if(contourPoints.empty()) continue;
+
+        QPainterPath path(contourPoints[0]);
+        QList<QLineF> ls;
+        for(int i = 1; i <  contourPoints.size();i++)
+        {
+            path.lineTo(contourPoints[i]);
+            ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
+        }
+        auto item = new CustomGraphicsPathItem(path);
+        CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+        p->setUndoStack(scene->getUndoStack());
+        p->setChildLine(ls);
+        QPen rrr( Qt::red,40);
+        item->setPen(rrr);
+        outerContourList.append(item);
+        scene->addItem(item);
+    }
+}
+
 QMenu *MainWindow::createMenu()
 {
     QMenu* menu = new QMenu(this);
@@ -374,9 +351,86 @@ QMenu *MainWindow::createMenu()
     return  menu;
 }
 
-void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene)
+void MainWindow::populateSelectedScene()
+{
+    auto selectedItems = scene->selectedItems();
+    if(selectedItems.empty()) return; 
+    QList<QGraphicsItem *> filter;
+    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret1 = geometryParser->intersectItemsLoopCluster(items,scene,filter);
+    addOuterContourToScene(ret1);
+    ret.unite(ret1);
+}
+
+void MainWindow::clearOuterContour()
+{
+    for(auto item: outerContourList)
+    {
+        scene->removeItem(item);
+    }
+    outerContourList.clear();
+    ret.clear();
+}
+
+void MainWindow::dxfFileWriteAllItems()
+{ 
+    dxfFileWrite(scene->items());
+}
+
+void MainWindow::dxfFileWriteSelectedItems()
+{
+    auto selectedItems = scene->selectedItems();
+    dxfFileWrite(selectedItems);
+}
+
+void MainWindow::dxfFileWriteOuterContour()
+{
+    dxfFileWrite(outerContourList);
+}
+
+void MainWindow::dxfFileWriteInnerContour()
 {
 
+}
+
+void MainWindow::dxfFileWriteCutAndOuterContour()
+{
+
+}
+
+void MainWindow::recognitionCutAllV()
+{
+    if(outerContourList.empty())
+    {
+        QMessageBox::information(this, tr("提示"), tr("请先识别外轮廓"));
+        return;
+    }
+    cutList.clear();
+    QMap<QGraphicsItem*,QList<QGraphicsItem*>> item2Cutv;
+    auto items = outerContourList;
+    for(auto item: items)
+    {
+        auto cuts = recognitionCutV(item);
+        //把cuts组成图元对象，添加到scene中
+        for (auto cut: cuts)
+        {
+            QPainterPath path(cut[0].p1());
+            path.lineTo(cut[0].p2());
+            path.lineTo(cut[1].p2());
+            path.lineTo(cut[1].p1());
+            auto item1 = new CustomGraphicsPathItem(path);
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+            p->setChildLine(cut);
+            p->setUndoStack(scene->getUndoStack());
+            scene->addItem(item1);
+            cutList.append(item1);
+            item2Cutv[item].append(item1);
+        }
+    }
+}
+
+void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene)
+{
+    
     auto items =  scene->items();
     QSet<QGraphicsItem*> filter;
     for(auto item: items)
@@ -389,7 +443,7 @@ void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene)
         if (!collidingItems.isEmpty()) {
             // 如果有其他图元与当前图元重叠
             for (QGraphicsItem* collidingItem : collidingItems) {
-                    // 如果重叠的图元 Z 值高于当前图元，则调整当前图元的 Z 值
+                // 如果重叠的图元 Z 值高于当前图元，则调整当前图元的 Z 值
                 filter.insert(collidingItem);
                 collidingItem->setZValue(item->zValue() + 1);
             }
@@ -413,25 +467,47 @@ void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
 
 }
 
-QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutSelectedV()
+void MainWindow::recognitionCutSelectedV()
 {
-    QMap<QGraphicsItem*,QList<QList<QLineF>>> item2Cutv;
+    QMap<QGraphicsItem*,QList<QGraphicsItem*>> item2Cutv;
     auto items = scene->selectedItems();
     for(auto item: items)
     {
         auto cuts = recognitionCutV(item);
-        item2Cutv[item] = cuts;
+        //把cuts组成图元对象，添加到scene中
+        for (auto cut: cuts)
+        {
+            QPainterPath path(cut[0].p1());
+            path.lineTo(cut[0].p2());
+            path.lineTo(cut[1].p2());
+            path.lineTo(cut[1].p1());
+            auto item1 = new CustomGraphicsPathItem(path);
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+            p->setChildLine(cut);
+            p->setUndoStack(scene->getUndoStack());
+            scene->addItem(item1);
+            cutList.append(item1);
+            item2Cutv[item].append(item1);
+        }
     }
-
-
-
-
-    return item2Cutv;
 }
 
-QMap<QGraphicsItem*,QList<QList<QLineF>>> MainWindow::recognitionCutSelectedI()
+void MainWindow::recognitionCutAllI()
 {
 
+}
+
+void MainWindow::recognitionCutSelectedI()
+{
+    
+}
+
+void MainWindow::recognitionOverCutAll()
+{
+}
+
+void MainWindow::recognitionOverCutSelected()
+{
 }
 
 void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
