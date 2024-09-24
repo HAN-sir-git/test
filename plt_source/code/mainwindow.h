@@ -159,10 +159,18 @@ public slots:
     void recognitionCutAllV();
     // 识别选中的图元的V型剪口
     void recognitionCutSelectedV();
+    // 清空剪口
+    void clearVCut();
+
     // 识别所有图元的I型剪口
     void recognitionCutAllI();
     // 识别选中的图元的I型剪口
     void recognitionCutSelectedI();
+    // 清空剪口
+    void clearICut();
+
+    // 清空剪口
+    void clearCut();
 
     // 过切识别
     // 识别所有图元的过切
@@ -189,7 +197,9 @@ private:
     QMap<QGraphicsItem*, QGraphicsItemListPtr> ret ;
     QList<QGraphicsItem*> outerContourList;  // 外轮廓
     // 剪口
-    QList<QGraphicsItem*> cutList;
+    QList<QGraphicsItem*> VCutList;
+    QList<QGraphicsItem*> ICutList;
+
 
 };
 

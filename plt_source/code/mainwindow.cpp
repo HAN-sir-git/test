@@ -322,24 +322,37 @@ QMenu *MainWindow::createMenu()
     QMenu* menu1 = new QMenu(tr("dxf文件导出"),menu);
     QMenu* menu2 = new QMenu(tr("剪口识别"),menu);
     QMenu* menu3 = new QMenu(tr("生成过切"),menu);
+    QMenu* menu4 = new QMenu(tr("外轮廓识别"),menu);
 
-    QAction* action11 = menu1->addAction(tr("导出所有图元"),this,SLOT(dxfFileWriteAllItem()));
-    QAction* action12 = menu1->addAction(tr("导出选中图元"),this,SLOT(dxfFileWriteSelectedItem()));
+    QAction* action11 = menu1->addAction(tr("导出所有图元"),this,SLOT(dxfFileWriteAllItems()));
+    QAction* action12 = menu1->addAction(tr("导出选中图元"),this,SLOT(dxfFileWriteSelectedItems()));
     QAction* action13 = menu1->addAction(tr("导出外轮廓"),this,SLOT(dxfFileWriteOuterContour()));
     QAction* action14 = menu1->addAction(tr("导出内轮廓"),this,SLOT(dxfFileWriteInnerContour()));
-    QAction* action15 = menu1->addAction(tr("导出剪口&外轮廓"),this,SLOT(dxfFileWriteCutAndOuterContour()));
-    QAction* action16 = menu1->addAction(tr("导出剪口&外轮廓&过切"),this,SLOT(dxfFileWriteCutAndOuterContourAndOverCut()));
+    QAction* action15 = menu1->addAction(tr("导出剪口+外轮廓"),this,SLOT(dxfFileWriteCutAndOuterContour()));
+    QAction* action16 = menu1->addAction(tr("导出剪口+外轮廓+过切"),this,SLOT(dxfFileWriteCutAndOuterContourAndOverCut()));
 
     QMenu* menu21 = new QMenu(tr("V剪口"),menu2);
     QAction* action211 = menu21->addAction(tr("识别所有图元"),this,SLOT(recognitionCutAllV()));
     QAction* action212 = menu21->addAction(tr("识别选中图元"),this,SLOT(recognitionCutSelectedV()));
+    QAction* action213 = menu21->addAction(tr("清空V剪口"),this,SLOT(clearOuterContour()));
 
     QMenu* menu22 = new QMenu(tr("I剪口"),menu2);
     QAction* action221 = menu22->addAction(tr("识别所有图元"),this,SLOT(recognitionCutAllI()));
     QAction* action222 = menu22->addAction(tr("识别选中图元"),this,SLOT(recognitionCutSelectedI()));
+    QAction* action223 = menu22->addAction(tr("清空I剪口"),this,SLOT(clearOuterContour()));
 
-    QAction* action31 = menu3->addAction(tr("生成所有图元"),this,SLOT(recognitionOverCutAll()));
-    QAction* action32 = menu3->addAction(tr("生成选中图元"),this,SLOT(recognitionOverCutSelected()));
+    QAction* action23  = menu2->addAction(tr("清空剪口"),this,SLOT(clearOuterContour()));
+
+
+
+
+    QAction* action31 = menu3->addAction(tr("生成所有图元过切"),this,SLOT(recognitionOverCutAll()));
+    QAction* action32 = menu3->addAction(tr("生成选中图元过切"),this,SLOT(recognitionOverCutSelected()));
+
+    QAction* action41 = menu4->addAction(tr("识别外轮廓"),this,SLOT(populateScene()));
+    QAction* action42 = menu4->addAction(tr("识别选中图元外轮廓"),this,SLOT(populateSelectedScene()));
+    QAction* action43 = menu4->addAction(tr("清空外轮廓"),this,SLOT(clearOuterContour()));
+
 
     menu2->addMenu(menu21);
     menu2->addMenu(menu22);
@@ -356,7 +369,7 @@ void MainWindow::populateSelectedScene()
     auto selectedItems = scene->selectedItems();
     if(selectedItems.empty()) return; 
     QList<QGraphicsItem *> filter;
-    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret1 = geometryParser->intersectItemsLoopCluster(items,scene,filter);
+    QMap<QGraphicsItem*, QGraphicsItemListPtr> ret1 = geometryParser->intersectItemsLoopCluster(selectedItems,scene,filter);
     addOuterContourToScene(ret1);
     ret.unite(ret1);
 }
@@ -397,6 +410,11 @@ void MainWindow::dxfFileWriteCutAndOuterContour()
 
 }
 
+void MainWindow::dxfFileWriteCutAndOuterContourAndOverCut()
+{
+
+}
+
 void MainWindow::recognitionCutAllV()
 {
     if(outerContourList.empty())
@@ -418,53 +436,16 @@ void MainWindow::recognitionCutAllV()
             path.lineTo(cut[1].p2());
             path.lineTo(cut[1].p1());
             auto item1 = new CustomGraphicsPathItem(path);
-            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item1);
             p->setChildLine(cut);
             p->setUndoStack(scene->getUndoStack());
+            QPen rrr( QColor(168, 4, 209),40);
+            item1->setPen(rrr);
             scene->addItem(item1);
             cutList.append(item1);
             item2Cutv[item].append(item1);
         }
     }
-}
-
-void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene)
-{
-    
-    auto items =  scene->items();
-    QSet<QGraphicsItem*> filter;
-    for(auto item: items)
-    {
-        if(filter.contains(item))
-            continue;
-        // 获取和该图元重叠的其他图元
-        QList<QGraphicsItem*> collidingItems = scene->items(item->sceneBoundingRect(),Qt::ContainsItemShape);
-
-        if (!collidingItems.isEmpty()) {
-            // 如果有其他图元与当前图元重叠
-            for (QGraphicsItem* collidingItem : collidingItems) {
-                // 如果重叠的图元 Z 值高于当前图元，则调整当前图元的 Z 值
-                filter.insert(collidingItem);
-                collidingItem->setZValue(item->zValue() + 1);
-            }
-        }
-    }
-}
-
-void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
-{
-    // 获取文件保存路径
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                                                    "untitled.dxf",
-                                                    tr("DXF Files (*.dxf)"));
-    if(fileName.isEmpty())
-    {
-        return;
-    }
-
-    // 保存文件
-    dxfWriter->writeDxfFile(fileName, items);
-
 }
 
 void MainWindow::recognitionCutSelectedV()
@@ -482,9 +463,11 @@ void MainWindow::recognitionCutSelectedV()
             path.lineTo(cut[1].p2());
             path.lineTo(cut[1].p1());
             auto item1 = new CustomGraphicsPathItem(path);
-            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item1);
             p->setChildLine(cut);
             p->setUndoStack(scene->getUndoStack());
+            QPen rrr( QColor(168, 4, 209),40);
+            item1->setPen(rrr);
             scene->addItem(item1);
             cutList.append(item1);
             item2Cutv[item].append(item1);
@@ -508,6 +491,30 @@ void MainWindow::recognitionOverCutAll()
 
 void MainWindow::recognitionOverCutSelected()
 {
+}
+
+void MainWindow::clearVCut()
+{
+    for(auto item: VCutList)
+    {
+        scene->removeItem(item);
+    }
+    VCutList.clear();
+}
+
+void MainWindow::clearICut()
+{
+    for(auto item: ICutList)
+    {
+        scene->removeItem(item);
+    }
+    ICutList.clear();
+}
+
+void MainWindow::clearCut()
+{
+    clearVCut();
+    clearICut();
 }
 
 void MainWindow::mergeIntersectedPolyline(PolyLinePtrList& polyLineList)
@@ -665,6 +672,45 @@ void MainWindow::convertPltData(std::shared_ptr<ConvertData>& data)
     createEndPointKdTree(data->polyline_list);
    // 合并端点相交polyline
     mergeIntersectedPolyline(data->polyline_list);
+}
+
+void MainWindow::adjustZValueIfCovered(QGraphicsScene *scene)
+{
+
+    auto items =  scene->items();
+    QSet<QGraphicsItem*> filter;
+    for(auto item: items)
+    {
+        if(filter.contains(item))
+            continue;
+        // 获取和该图元重叠的其他图元
+        QList<QGraphicsItem*> collidingItems = scene->items(item->sceneBoundingRect(),Qt::ContainsItemShape);
+
+        if (!collidingItems.isEmpty()) {
+            // 如果有其他图元与当前图元重叠
+            for (QGraphicsItem* collidingItem : collidingItems) {
+                // 如果重叠的图元 Z 值高于当前图元，则调整当前图元的 Z 值
+                filter.insert(collidingItem);
+                collidingItem->setZValue(item->zValue() + 1);
+            }
+        }
+    }
+}
+
+void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
+{
+    // 获取文件保存路径
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                                    "untitled.dxf",
+                                                    tr("DXF Files (*.dxf)"));
+    if(fileName.isEmpty())
+    {
+        return;
+    }
+
+    // 保存文件
+    dxfWriter->writeDxfFile(fileName, items);
+
 }
 
 void  MainWindow::openPltFile()
