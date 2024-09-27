@@ -55,7 +55,8 @@ HEADERS += mainwindow.h view.h chip.h \
     CommonDataForm/filterdxfrw.h \
     CommonDataForm/block.h \
     recComponent/CutPosRecognition/cutpos.h \
-    recComponent/CutPosRecognition/cutposv.h
+    recComponent/CutPosRecognition/cutposv.h \
+    CustomGraphicsItem/customgraphicsitemgroup.h
 
 
 
@@ -80,7 +81,8 @@ SOURCES += main.cpp \
     CommonDataForm/filterdxfrw.cpp \
     CommonDataForm/block.cpp \
     recComponent/CutPosRecognition/cutpos.cpp \
-    recComponent/CutPosRecognition/cutposv.cpp
+    recComponent/CutPosRecognition/cutposv.cpp \
+    CustomGraphicsItem/customgraphicsitemgroup.cpp
 
 
 

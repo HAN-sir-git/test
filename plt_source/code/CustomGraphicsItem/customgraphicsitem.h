@@ -14,6 +14,8 @@ public:
     virtual void  setChildLine(const QList<QLineF> &line);
     virtual QList<QLineF> childLine() const;
     virtual void appendChildLine(const QLineF &line);
+
+    virtual QList<QLineF> getGlobalChildLine() const ;
     virtual void clearChildLine();
     virtual void setUndoStack(QUndoStack *undoStack);
 

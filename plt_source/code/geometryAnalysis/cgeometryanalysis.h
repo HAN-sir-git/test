@@ -79,9 +79,14 @@ public:
     /****************************************************轮廓查找*********************************************************/
 
     // 查找轮廓中的左下角点
-    QPointF findBottomLeftPoint(const QList<QPointF>& points);
+    static QPointF findBottomLeftPoint(const QList<QPointF>& points);
 
-    qreal angleBetweenLists(const QPointF& referenceList, const QPointF& List);
+    // 查找有序点集中的左下角点索引
+    static int findBottomLeftPointIndex(const QList<QPointF>& points);
+
+    static int findOverCutPointIndex(const QList<QPointF> &points,qreal minAngle = 40,qreal maxAngle = 120);
+
+    static qreal angleBetweenLists(const QPointF& referenceList, const QPointF& List);
 
     // 从指定起始点(左下角点)开始，找到逆时针方向上夹角最大的点，并依次更新参考向量
     QList<QPointF> findContour(const QPointF& startPoint, const QMap<QPointF, QSet<QPointF>>& pointNeighborhood);

@@ -8,21 +8,6 @@
 #include "CommonDataForm/common_mathfunc.h"
 #include "tool.h"
 
-
-bool operator<(const QPointF& p1, const QPointF& p2) {
-    if (p1.x() < p2.x()) return true;
-    if (p1.x() > p2.x()) return false;
-    return p1.y() < p2.y();
-}
-
-uint qHash(const QPointF &key, uint seed = 0) {
-    return qHash(qRound(key.x()), seed) ^ qHash(qRound(key.y()), seed);
-}
-
-bool pointsAreClose(const QPointF& p1, const QPointF& p2, qreal epsilon = 0.0001) {
-    return std::abs(p1.x() - p2.x()) < epsilon && std::abs(p1.y() - p2.y()) < epsilon;
-}
-
 CGeometryAnalysis::CGeometryAnalysis(QGraphicsScene *scene)
 {
     m_scene = scene;
@@ -285,7 +270,7 @@ QMap<QGraphicsItem *, QList<QLineF> > CGeometryAnalysis::convertToLineMap(const 
         for (QGraphicsItem* item : itemListPtr) {
             if (item && dynamic_cast<CustomGraphicsInterface*>(item)) {
                 CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
-                lineList.append(p->childLine());
+                lineList.append(p->getGlobalChildLine());
             }
         }
 
@@ -416,7 +401,8 @@ QList<QLineF> CGeometryAnalysis::breakLinesByIntersectionFromFuncs(const QList<Q
     return brokenLines;
 }
 
-QPointF CGeometryAnalysis::findBottomLeftPoint(const QList<QPointF> &points) {
+QPointF CGeometryAnalysis::findBottomLeftPoint(const QList<QPointF> &points)
+{
     if (points.isEmpty()) {
         return QPointF(); // 返回无效点或处理空情况
     }
@@ -432,6 +418,73 @@ QPointF CGeometryAnalysis::findBottomLeftPoint(const QList<QPointF> &points) {
     }
 
     return bottomLeft;
+}
+
+int CGeometryAnalysis::findBottomLeftPointIndex(const QList<QPointF> &points) {
+    if (points.isEmpty()) {
+        return -1; // 返回无效点或处理空情况
+    }
+
+    int  index = 0;
+    QPointF bottomLeft = points.first();
+
+    for (int i = 1 ; i < points.size(); i++) {
+        auto point = points[i];
+        // 如果 x 更小，更新左下角点
+        if (point.x() < bottomLeft.x() ||
+                (point.x() == bottomLeft.x() && point.y() < bottomLeft.y())) {
+            bottomLeft = point;
+            index = i;
+        }
+    }
+
+    return index;
+}
+
+int CGeometryAnalysis::findOverCutPointIndex(const QList<QPointF> &points, qreal minAngle, qreal maxAngle)
+{
+    int n = points.size();
+
+    //记录 角度最大和最小的索引
+    int maxIndex = 0;
+    int minIndex = 0;
+    qreal maxAngleValue = 0;
+    qreal minAngleValue = 360;
+
+    for (int i = 0; i < n; ++i) {
+        QPointF p1 = points[i];
+        QPointF p2 = points[(i - 1 + n) % n];
+        QPointF p3 = points[(i + 1) % n];
+
+        QVector2D v1(p2 - p1);
+        QVector2D v2(p3 - p1);
+        int angle = Tool::angleBetweenVectors(v1,v2);
+        angle = angle % 180;
+        if(angle > maxAngleValue)
+        {
+            maxAngleValue = angle;
+            maxIndex = i;
+        }
+        if(angle < minAngleValue)
+        {
+            minAngleValue = angle;
+            minIndex = i;
+        }
+        if (angle > minAngle && angle < maxAngle) {
+            
+            // 获取 p2 和 p3 的中点
+            QPointF midPoint = (p2 + p3) / 2;
+            
+            // 判断 midPoint 是否在多边形内部
+            QPainterPath path;
+            path.addPolygon(QPolygonF(points.toVector()));
+            if (path.contains(midPoint)) {
+                return i;
+
+        }
+    }
+}
+        return minIndex;
 }
 
 qreal CGeometryAnalysis::angleBetweenLists(const QPointF &referenceList, const QPointF &List) {

@@ -11,6 +11,12 @@ public:
     CustomGraphicsPathItem(QGraphicsItem *parent = nullptr);
     CustomGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent = nullptr);
 
+public:
+    QPainterPath getGlobalPath() const;
+    
+    QList<QLineF> getGlobalChildLine() const;
+
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
 

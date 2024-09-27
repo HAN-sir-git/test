@@ -3,14 +3,20 @@
 
 #include <QGraphicsPolygonItem>
 #include "customgraphicsitem.h"
-
+#include <QObject>
 
 class CustomGraphicsPolygonItem : public QGraphicsPolygonItem , public CustomGraphicsInterface
 {
+
 public:
     CustomGraphicsPolygonItem(QGraphicsItem *parent = nullptr);
     CustomGraphicsPolygonItem(const QPolygonF &polygon,
                               QGraphicsItem *parent = nullptr);
+
+
+    QPolygonF getGlobalPolygon();
+
+    QList<QLineF> getGlobalChildLine() const;
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

@@ -16,6 +16,11 @@ void CustomGraphicsInterface::appendChildLine(const QLineF &line)
     child_line.append(line);
 }
 
+QList<QLineF> CustomGraphicsInterface::getGlobalChildLine() const
+{
+    return QList<QLineF>();
+}
+
 void CustomGraphicsInterface::clearChildLine()
 {
     child_line.clear();

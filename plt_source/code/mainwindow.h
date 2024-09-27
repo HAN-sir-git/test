@@ -127,6 +127,9 @@ private:
     // 识别单轮廓的I型剪口
     QList <QList <QLineF>> recognitionCutI( QGraphicsItem* item);
 
+    // 识别轮廓的过切
+    QList <QVector <QLineF>> generateOverCut( QGraphicsItem* item);
+
     // 增加ret外轮廓到场景
     void addOuterContourToScene(QMap<QGraphicsItem*, QGraphicsItemListPtr>& ret);
 

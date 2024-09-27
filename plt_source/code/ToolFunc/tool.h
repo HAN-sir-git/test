@@ -20,6 +20,12 @@ enum LineRelation
     Coincide = 1 << 3,
 };
 
+bool operator<(const QPointF& p1, const QPointF& p2);
+
+uint qHash(const QPointF &key, uint seed = 0);
+
+bool pointsAreClose(const QPointF& p1, const QPointF& p2, qreal epsilon = 0.0001);
+
 
 // 工具类
 class Tool
@@ -43,6 +49,7 @@ public:
     static bool K_getNearestPoint(const QPointF &coord,const QList<QPointF> &points,const int &K, QList<QPointF> &res_points);
 
     /*****************************geometry relationship************************************************/
+    //0-180
     static double angleBetweenVectors(const QVector2D& v1, const QVector2D& v2);
 
     static qreal calculateIntersectionPercentage(const QRectF& rect1, const QRectF& rect2);

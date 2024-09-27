@@ -57,7 +57,7 @@
 #include <QHBoxLayout>
 #include <QSplitter>
 #include <QFileDialog>
-#include <QImage>
+#include <QImage>`
 #include <QSize>
 #include <qmath.h>
 #include <QRGB>
@@ -140,7 +140,10 @@ void MainWindow::resetSence()
 
 void MainWindow::clearVar()
 {
-
+    ret.clear();
+    outerContourList.clear();
+    VCutList.clear();
+    ICutList.clear();
 }
 
 void MainWindow::contextMenuEvent(QContextMenuEvent *event)
@@ -279,6 +282,112 @@ QList<QList<QLineF> > MainWindow::recognitionCutI(QGraphicsItem *item)
 
 }
 
+QList<QVector<QLineF>> MainWindow::generateOverCut(QGraphicsItem *item)
+{
+    QPointF inLine_s,inLine_e;
+    QPointF outLine_s,outLine_e;
+
+    QList<QVector<QLineF>> overCutLines;
+    switch (item->type())
+    {
+        //item 闭合情况下
+        case QGraphicsPolygonItem::Type:
+        {
+            CustomGraphicsPolygonItem *polygonItem = qgraphicsitem_cast<CustomGraphicsPolygonItem *>(item);
+            // 获取点集合
+            auto points = polygonItem->getGlobalPolygon().toList();
+            points.pop_back();
+            if (points.size() < 3)
+            {
+                return QList<QVector<QLineF>>();
+            }
+            // 获取左下角的点
+
+            int index = CGeometryAnalysis::findOverCutPointIndex(points);
+
+            if (index == -1)
+            {
+                return QList<QVector<QLineF>>();
+            }
+            QVector2D v_sline,v_eline;
+
+            // 考虑出现相邻重合点
+            int step = 1;
+            while(pointsAreClose(points[index],points[(index + step) % points.size()]))
+            {
+                step++;
+            }
+            v_sline  =  QVector2D(points[index] - points[(index + step)% points.size()]);
+            // 单位向量
+            v_sline.normalize();
+            v_sline *= 200;
+
+            step  = 1;
+            while(pointsAreClose(points[index],points[(index - step + points.size())% points.size()]))
+            {
+                step++;
+            }
+            v_eline  =  QVector2D(points[index] - points[(index - step + points.size())% points.size()]);
+            // 单位向量
+            v_eline.normalize();
+            v_eline *= 200;
+
+            inLine_s = points[index] + v_sline.toPointF();
+            inLine_e = points[index];
+            outLine_s = points[index];
+            outLine_e = points[index] + v_eline.toPointF();
+            break;
+        }
+    }
+    
+    QLineF inLine(inLine_s,inLine_e);
+    QLineF outLine(outLine_s,outLine_e);
+    overCutLines.append({inLine});
+    overCutLines.append({outLine});
+
+//    // 在inLine的中点处，构建一个箭头，箭头指向终点
+//    QPointF midPoint = inLine.pointAt(0.7);
+
+//    // inLine的垂直向量
+//    QVector2D zV(inLine.dy(),inLine.dx());
+//    QVector2D fV(-inLine.dy(),-inLine.dx());
+
+
+//    auto p1 = inLine_s + (zV * 0.7).toPointF();
+//    auto p2 = inLine_s + (fV * 0.7).toPointF();
+
+//    QLineF arrowLine(midPoint,p1);
+//    QLineF arrowLine1(midPoint,p2);
+
+//    // 规约 arrowLine 和 arrowLine1 的长度
+//    arrowLine.setLength(80);
+//    arrowLine1.setLength(80);
+
+//    overCutLines.append({inLine,arrowLine,arrowLine1});
+
+//    // 在outLine的中点处，构建一个箭头，箭头指向终点
+//    midPoint = outLine.pointAt(0.7);
+
+//    // outLine的垂直向量
+//    zV = QVector2D(outLine.dy(),outLine.dx());
+//    fV = QVector2D(-outLine.dy(),-outLine.dx());
+
+//    p1 = outLine_s + (zV * 0.7).toPointF();
+//    p2 = outLine_s + (fV * 0.7).toPointF();
+
+//    QLineF arrowLine2(midPoint,p1);
+//    QLineF arrowLine3(midPoint,p2);
+
+//    // 规约 arrowLine2 和 arrowLine3 的长度
+//    arrowLine2.setLength(80);
+//    arrowLine3.setLength(80);
+
+//    overCutLines.append({outLine,arrowLine2,arrowLine3});
+
+    return overCutLines;
+
+}
+
 void MainWindow::addOuterContourToScene(QMap<QGraphicsItem *, QGraphicsItemListPtr> &ret1)
 {
     QMap<QGraphicsItem*, QList<QLineF>> item2Lines = geometryParser->convertToLineMap(ret1);
@@ -297,14 +406,13 @@ void MainWindow::addOuterContourToScene(QMap<QGraphicsItem *, QGraphicsItemListP
 
         if(contourPoints.empty()) continue;
 
-        QPainterPath path(contourPoints[0]);
+        QVector<QPointF> path = contourPoints.toVector();
         QList<QLineF> ls;
         for(int i = 1; i <  contourPoints.size();i++)
         {
-            path.lineTo(contourPoints[i]);
             ls.append(QLineF(contourPoints[i-1],contourPoints[i]));
         }
-        auto item = new CustomGraphicsPathItem(path);
+        auto item = new CustomGraphicsPolygonItem(path);
         CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(item);
         p->setUndoStack(scene->getUndoStack());
         p->setChildLine(ls);
@@ -360,6 +468,8 @@ QMenu *MainWindow::createMenu()
     menu->addMenu(menu1);
     menu->addMenu(menu2);
     menu->addMenu(menu3);
+    menu->addMenu(menu4);
+
 
     return  menu;
 }
@@ -422,7 +532,7 @@ void MainWindow::recognitionCutAllV()
         QMessageBox::information(this, tr("提示"), tr("请先识别外轮廓"));
         return;
     }
-    cutList.clear();
+    VCutList.clear();
     QMap<QGraphicsItem*,QList<QGraphicsItem*>> item2Cutv;
     auto items = outerContourList;
     for(auto item: items)
@@ -442,7 +552,7 @@ void MainWindow::recognitionCutAllV()
             QPen rrr( QColor(168, 4, 209),40);
             item1->setPen(rrr);
             scene->addItem(item1);
-            cutList.append(item1);
+            VCutList.append(item1);
             item2Cutv[item].append(item1);
         }
     }
@@ -469,7 +579,7 @@ void MainWindow::recognitionCutSelectedV()
             QPen rrr( QColor(168, 4, 209),40);
             item1->setPen(rrr);
             scene->addItem(item1);
-            cutList.append(item1);
+            VCutList.append(item1);
             item2Cutv[item].append(item1);
         }
     }
@@ -482,15 +592,81 @@ void MainWindow::recognitionCutAllI()
 
 void MainWindow::recognitionCutSelectedI()
 {
-    
+
 }
 
 void MainWindow::recognitionOverCutAll()
 {
+    QMap<QGraphicsItem*,QVector<QGraphicsItem*>> item2Overcut;
+    auto item = outerContourList;
+    
+    // 遍历所有图元，生成过切
+    for(auto item: item)
+    {
+        auto overcut = generateOverCut(item);
+        //把cuts组成图元对象，添加到scene中
+        for(int i = 0;i < overcut.size();i++)
+        {
+            auto lines = overcut[i];
+            CustomGraphicsLineItem* mainLineItem = new CustomGraphicsLineItem(lines[0]);
+            //CustomGraphicsItemGroup *groupItem = new CustomGraphicsItemGroup();
+            //groupItem->addToGroup(mainLineItem);
+//            for(int i = 1; i < lines.size();i++)
+//            {
+//                CustomGraphicsLineItem* lineItem = new CustomGraphicsLineItem(lines[i]);
+//                groupItem->addToGroup(lineItem);
+//            }
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(mainLineItem);
+            p->setUndoStack(scene->getUndoStack());
+            QPen rrr( QColor(168, 4, 209),40);
+            if(i % 2 != 0)
+            {
+                rrr.setColor(QColor(31, 230, 9));
+            }
+            mainLineItem->setPen(rrr);
+            scene->addItem(mainLineItem);
+            item2Overcut[item].append(mainLineItem);
+        }
+    }
 }
 
 void MainWindow::recognitionOverCutSelected()
 {
+    QMap<QGraphicsItem*,QVector<QGraphicsItem*>> item2Overcut;
+    auto items = scene->selectedItems();
+
+    // 遍历所有图元，生成过切
+    for(auto item: items)
+    {
+        if(!outerContourList.contains(item))
+        {
+            continue;
+        }
+        auto overcut = generateOverCut(item);
+        //把cuts组成图元对象，添加到scene中
+        for(int i = 0;i < overcut.size();i++)
+        {
+            auto lines = overcut[i];
+            CustomGraphicsLineItem* mainLineItem = new CustomGraphicsLineItem(lines[0]);
+            //CustomGraphicsItemGroup *groupItem = new CustomGraphicsItemGroup();
+            //groupItem->addToGroup(mainLineItem);
+//            for(int i = 1; i < lines.size();i++)
+//            {
+//                CustomGraphicsLineItem* lineItem = new CustomGraphicsLineItem(lines[i]);
+//                groupItem->addToGroup(lineItem);
+//            }
+            CustomGraphicsInterface *p = dynamic_cast<CustomGraphicsInterface*>(mainLineItem);
+            p->setUndoStack(scene->getUndoStack());
+            QPen rrr( QColor(168, 4, 209),40);
+            if(i % 2 != 0)
+            {
+                rrr.setColor(QColor(31, 230, 9));
+            }
+            mainLineItem->setPen(rrr);
+            scene->addItem(mainLineItem);
+            item2Overcut[item].append(mainLineItem);
+        }
+    }
 }
 
 void MainWindow::clearVCut()
@@ -716,6 +892,7 @@ void MainWindow::dxfFileWrite(QList<QGraphicsItem *> items)
 void  MainWindow::openPltFile()
 {
     resetSence();
+    clearVar();
     if(parser->ParsePltFile())
     {
        auto data = parser->getPltData();

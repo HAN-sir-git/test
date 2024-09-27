@@ -165,3 +165,17 @@ QList<QPointF> Tool::getIntersectionPoints(const QList<QLineF> &lines)
     }
     return intersectionPoints;
 }
+
+bool operator<(const QPointF &p1, const QPointF &p2) {
+    if (p1.x() < p2.x()) return true;
+    if (p1.x() > p2.x()) return false;
+    return p1.y() < p2.y();
+}
+
+uint qHash(const QPointF &key, uint seed) {
+    return qHash(qRound(key.x()), seed) ^ qHash(qRound(key.y()), seed);
+}
+
+bool pointsAreClose(const QPointF &p1, const QPointF &p2, qreal epsilon) {
+    return std::abs(p1.x() - p2.x()) < epsilon && std::abs(p1.y() - p2.y()) < epsilon;
+}

@@ -11,6 +11,10 @@ public:
     CustomGraphicsLineItem(QGraphicsItem *parent = nullptr);
     CustomGraphicsLineItem(const QLineF &line, QGraphicsItem *parent = nullptr);
 
+public:
+    QLineF getGlobalLine() const;
+    
+    QList<QLineF> getGlobalChildLine() const;
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

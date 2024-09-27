@@ -250,7 +250,6 @@ public:
 //             block.basePoint.y =bk->getBasePoint().y();
 //              block.basePoint.z =0.;
 //            block.flags = 1;//flag for unnamed block
-//            dxfW->writeBlock(&block);
 //            //and write each entity in block
 //             for (auto ent :bk->ents)
 //                 writeEntity(ent.get());
@@ -304,8 +303,7 @@ public:
     } //unused
 
     void writeEntities() override {
-//        for (auto e : hsData->mBlock->ents)
-//            writeEntity(e.get());
+
         for (auto e : currentBlock->ents)
             writeEntity(e.get());
 //        DRW_Line line;

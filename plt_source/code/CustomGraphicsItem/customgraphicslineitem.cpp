@@ -20,6 +20,20 @@ CustomGraphicsLineItem::CustomGraphicsLineItem(const QLineF &line, QGraphicsItem
     setFlag(QGraphicsItem::ItemIsFocusable);
 }
 
+QLineF CustomGraphicsLineItem::getGlobalLine() const
+{
+    return QLineF(mapToScene(line().p1()), mapToScene(line().p2()));
+}
+
+QList<QLineF> CustomGraphicsLineItem::getGlobalChildLine() const
+{
+    QList<QLineF> lines;
+    for (const QLineF &line : child_line) {
+        lines.append(QLineF(mapToScene(line.p1()), mapToScene(line.p2())));
+    }
+    return lines;
+}
+
 void CustomGraphicsLineItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         lastMousePos = pos();

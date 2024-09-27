@@ -23,6 +23,20 @@ CustomGraphicsPathItem::CustomGraphicsPathItem(const QPainterPath &path, QGraphi
     setFlag(QGraphicsItem::ItemIsFocusable);
 }
 
+QPainterPath CustomGraphicsPathItem::getGlobalPath() const
+{
+    return mapToScene(path()); 
+}
+
+QList<QLineF> CustomGraphicsPathItem::getGlobalChildLine() const
+{
+    QList<QLineF> lines;
+    for (const QLineF &line : child_line) {
+        lines.append(QLineF(mapToScene(line.p1()), mapToScene(line.p2())));
+    }
+    return lines;
+}
+
 void CustomGraphicsPathItem::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         lastMousePos = pos();
