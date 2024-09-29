@@ -84,7 +84,7 @@ public:
     // 查找有序点集中的左下角点索引
     static int findBottomLeftPointIndex(const QList<QPointF>& points);
 
-    static int findOverCutPointIndex(const QList<QPointF> &points,qreal minAngle = 40,qreal maxAngle = 120);
+    static QList<int> findOverCutPointIndex(const QList<QPointF> &points,qreal minAngle = 0,qreal maxAngle = 120);
 
     static qreal angleBetweenLists(const QPointF& referenceList, const QPointF& List);
 

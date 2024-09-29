@@ -247,7 +247,7 @@ QGraphicsItemListPtr CGeometryAnalysis::loopCluster(QGraphicsItem * item, QGraph
                 }
 
                 // 如果intersectingItem遮挡了item，则将item加入到intersectingItem的聚类中
-                loopItems.append(intersectingItem);
+                //loopItems.append(intersectingItem);
                 cluster.append(intersectingItem);
                 clusteredItems.insert(intersectingItem);
             }
@@ -441,8 +441,9 @@ int CGeometryAnalysis::findBottomLeftPointIndex(const QList<QPointF> &points) {
     return index;
 }
 
-int CGeometryAnalysis::findOverCutPointIndex(const QList<QPointF> &points, qreal minAngle, qreal maxAngle)
+QList<int> CGeometryAnalysis::findOverCutPointIndex(const QList<QPointF> &points, qreal minAngle, qreal maxAngle)
 {
+    QList<int> overCutIndexs;
     int n = points.size();
 
     //记录 角度最大和最小的索引
@@ -452,6 +453,10 @@ int CGeometryAnalysis::findOverCutPointIndex(const QList<QPointF> &points, qreal
     qreal minAngleValue = 360;
 
     for (int i = 0; i < n; ++i) {
+        if(i == 230)
+        {
+            auto a = 1;
+        }
         QPointF p1 = points[i];
         QPointF p2 = points[(i - 1 + n) % n];
         QPointF p3 = points[(i + 1) % n];
@@ -459,7 +464,7 @@ int CGeometryAnalysis::findOverCutPointIndex(const QList<QPointF> &points, qreal
         QVector2D v1(p2 - p1);
         QVector2D v2(p3 - p1);
         int angle = Tool::angleBetweenVectors(v1,v2);
-        angle = angle % 180;
+
         if(angle > maxAngleValue)
         {
             maxAngleValue = angle;
@@ -471,20 +476,27 @@ int CGeometryAnalysis::findOverCutPointIndex(const QList<QPointF> &points, qreal
             minIndex = i;
         }
         if (angle > minAngle && angle < maxAngle) {
+            overCutIndexs.append(i);
+//            // 获取 p2 和 p3 的中点
+//            QPointF midPoint = (p2 + p3) / 2;
             
-            // 获取 p2 和 p3 的中点
-            QPointF midPoint = (p2 + p3) / 2;
-            
-            // 判断 midPoint 是否在多边形内部
-            QPainterPath path;
-            path.addPolygon(QPolygonF(points.toVector()));
-            if (path.contains(midPoint)) {
-                return i;
+//            // 判断 midPoint 是否在多边形内部
+//            QPainterPath path;
+//            path.addPolygon(QPolygonF(points.toVector()));
+//            if (path.contains(midPoint)) {
+//                overCutIndexs.append(i);
+//            }
 
         }
     }
-}
-        return minIndex;
+
+    if(overCutIndexs.isEmpty())
+    {
+        overCutIndexs.append(minIndex);
+    }
+
+    return overCutIndexs;
+
 }
 
 qreal CGeometryAnalysis::angleBetweenLists(const QPointF &referenceList, const QPointF &List) {

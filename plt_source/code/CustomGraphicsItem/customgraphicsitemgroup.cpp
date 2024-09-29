@@ -1,4 +1,5 @@
 #include "customgraphicsitemgroup.h"
+#include "customgraphicsheader.h"
 #include <QPen>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
@@ -40,6 +41,33 @@ void CustomGraphicsItemGroup::setPen(const QPen &pen)
             break;
         }   
     }
+}
+
+QList<QLineF> CustomGraphicsItemGroup::getGlobalChildLine() const
+{
+    QList<QLineF> lines;
+    for (QGraphicsItem *item : childItems()) {
+        switch (item->type()) {
+        case QGraphicsItemGroup::Type:
+            lines.append(static_cast<CustomGraphicsItemGroup *>(item)->getGlobalChildLine());
+            break;
+        case QGraphicsLineItem::Type:
+            lines.append(static_cast<CustomGraphicsLineItem *>(item)->getGlobalLine());
+            break;
+        case QGraphicsEllipseItem::Type:
+//            lines.append(static_cast<CustomGraphicsEllipseItem *>(item)->getGlobalChildLine());
+            break;
+        case QGraphicsPathItem::Type:
+            lines.append(static_cast<CustomGraphicsPathItem *>(item)->getGlobalChildLine());
+            break;
+        case QGraphicsPolygonItem::Type:
+            lines.append(static_cast<CustomGraphicsPolygonItem *>(item)->getGlobalChildLine());
+            break;
+        default:
+            break;
+        }
+    }
+    return lines;
 }
 
 void CustomGraphicsItemGroup::mousePressEvent(QGraphicsSceneMouseEvent *event)

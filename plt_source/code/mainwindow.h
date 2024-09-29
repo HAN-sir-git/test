@@ -125,7 +125,9 @@ private:
     // 识别单轮廓的V型剪口
     QList <QList <QLineF>> recognitionCutV( QGraphicsItem* item);
     // 识别单轮廓的I型剪口
-    QList <QList <QLineF>> recognitionCutI( QGraphicsItem* item);
+    QList <QGraphicsItem*> recognitionCutI( QGraphicsItem* item);
+
+
 
     // 识别轮廓的过切
     QList <QVector <QLineF>> generateOverCut( QGraphicsItem* item);

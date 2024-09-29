@@ -12,6 +12,9 @@ public:
 public:
      void setPen(const QPen &pen);
 
+     QList<QLineF> getGlobalChildLine() const;
+
+
 protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
