@@ -349,7 +349,23 @@ QList<QVector<QLineF>> MainWindow::generateOverCut(QGraphicsItem *item)
                 // 考虑出现相邻重合点
                 auto eline = QLineF(points[index] , points[(index + 1)% points.size()]);
 
-                auto sline =  QLineF(points[(index - 1 + points.size())% points.size()],points[index] );
+                auto slineV =  QVector2D(points[index] - points[(index - 1 + points.size())% points.size()] );
+
+                slineV.normalize();
+                // 50是过切
+                slineV *= 50;
+
+                // 判断points[index] + slineV.toPointF()是不是在闭合区域内部
+                QLineF sline;
+                QPainterPath path;
+                path.addPolygon(polygonItem->getGlobalPolygon());
+                QPointF p(points[index] + slineV.toPointF());
+                if(path.contains(p))
+                {
+                    sline = QLineF(points[(index - 1 + points.size())% points.size()],points[index]);
+                }else{
+                    sline = QLineF(points[(index - 1 + points.size())% points.size()],points[index] + slineV.toPointF());
+                }
                 overCutLines.append({sline,eline});
             }
             break;
