@@ -75,4 +75,48 @@ private:
     QVector<QPointF> stuff;
 };
 
+//#include <iostream>
+//#include <vector>
+//#include <map>
+
+//#include <algorithm>
+
+
+//#include <math.h>
+//using namespace std;
+
+//// nums = [1, 1，2，2，3，4，2，3] k = 6 x = 2
+//// return [6,10,12]
+// vector<int> findXSum(vector<int> &nums, int k,int x)
+//{
+//    if (nums.size() < k)
+//        return {};
+//    vector<int> res;
+//    int size = nums.size();
+//    int sum = 0;
+//    for (int i = 0; i < size - k + 1; i++)
+//    {
+//        sum = 0;
+//        vector<int> temp = {};
+//        std::map<int, int> m;
+//        for (int j = i; j < i + k; j++)
+//        {
+//            temp.push_back(nums[j]);
+//            m[nums[j]]++;
+//        }
+//        // 排序 从大到小 去重
+
+//        sort(temp.begin(), temp.end(), greater<int>());
+//        temp.erase(unique(temp.begin(), temp.end()), temp.end());
+//        //
+//        for (int j = 0; j < x; j++)
+//        {
+//            sum += temp[j] * m[temp[j]];
+//        }
+       
+//        res.push_back(sum);
+//    }
+//}
+
+
 #endif // CHIP_H
